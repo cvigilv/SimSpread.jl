@@ -5,7 +5,6 @@ using CUDA
 using DelimitedFiles
 using MLBase
 using NamedArrays
-using NetworkBasedInference
 using Random
 using StatsBase
 using Trapz
@@ -23,6 +22,7 @@ export writedlm,
     k,
 
     # SimSpread
+    spread,
     cutoff,
     pcutoff,
     featurize,

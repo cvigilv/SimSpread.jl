@@ -1,4 +1,36 @@
 """
+    spread(F₀::AbstractMatrix{Float64})
+
+# Arguments
+- `F₀::AbstractMatrix{Float64}`: Trilayered SimSpread network adjacency matrix
+
+# References
+1. Wu, et al (2016). SDTNBI: an integrated network and chemoinformatics tool for
+   systematic prediction of drug–target interactions and drug repositioning. Briefings in
+   Bioinformatics, bbw012. https://doi.org/10.1093/bib/bbw012
+2. Vigil-Vásquez & Schüller (2022). De Novo Prediction of Drug Targets and Candidates by
+   Chemical Similarity-Guided Network-Based Inference. International Journal of Molecular
+   Sciences, 23(17), 9666. https://doi.org/10.3390/ijms23179666
+"""
+function spread(F₀::AbstractMatrix{Float64})
+    # Transfer matrix
+    W = F₀ ./ k(F₀)
+    replace!(W, Inf => 0.0)
+    replace!(W, NaN => 0.0)
+
+    return W
+end
+
+spread(F₀::AbstractMatrix{Bool}) = spread(AbstractMatrix{Float64}(F₀))
+
+function spread(namedF₀::NamedMatrix)
+    namedW = copy(namedF₀)
+    namedW.array = spread(Matrix{Float64}(namedF₀.array))
+
+    return namedW
+end
+
+"""
     cutoff(x::T, α::T, weighted::Bool=false) where {T<:AbstractFloat}
 
 Transform `x` based in SimSpread's similarity cutoff function.
