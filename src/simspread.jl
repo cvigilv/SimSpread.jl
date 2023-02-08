@@ -95,47 +95,6 @@ function cutoff!(M::AbstractVecOrMat{T}, α::T, weighted::Bool=false) where {T<:
 end
 
 """
-    pcutoff(x::T, α::T, β::T, weighted::Bool=false) where {T<:AbstractFloat}
-
-wl-SimSpread similarity probabilistic cutoff function
-
-# Arguments
-- `x::T` : Value to apply criteria
-- `α::T` : Strong-ties threshold
-- `β::T` : Weak-ties probability
-- `weighted::Bool` : Apply weighting function to outcome (default = False)
-"""
-function pcutoff(x::T, α::T, β::T, weighted::Bool=false) where {T<:AbstractFloat}
-    if x == 0
-        return 0
-    end # Check if edge exist (val ≥ 0)
-    p = rand()
-    w = weighted ? x : 1        # Define weighting scheme
-    x ≥ α ? w : p ≤ β ? w : 0 # Filter edge by cutoffs α & β
-end
-
-"""
-    pcutoff(x::AbstractMatrix{T}, α::T, β::T, weighted::Bool=false) where {T<:AbstractFloat}
-
-wl-SimSpread similarity probabilistic cutoff function
-
-# Arguments
-- `M::T` : Matrix to apply criteria
-- `α::T` : Strong-ties threshold
-- `β::T` : Weak-ties probability
-- `weighted::Bool` : Apply weighting function to outcome (default = False)
-"""
-function pcutoff(M::AbstractMatrix{T}, α::T, β::T, weighted::Bool=false) where {T<:AbstractFloat}
-    M′ = similar(M)
-    for (ridx, rvec) in enumerate(eachrow(M))
-        isstronglylinked = any(rvec .≥ α)
-        M′[ridx, :] .= pcutoff.(rvec, α, isstronglylinked ? β : 0.0, weighted)
-    end
-
-    return M′
-end
-
-"""
     prepare!(DT::T, DF::T, Cs::AbstractVector) where {T<:NamedMatrix}
 
 Prepare compound-feature-drug-target network adjacency matrix for *de novo* NBI prediction.
@@ -339,58 +298,6 @@ function featurize(M::NamedArray, α::AbstractFloat, β::AbstractFloat, weighted
 end
 
 featurize(M::NamedArray, α::AbstractFloat, weighted::Bool) = featurize(M, α, 0.0, weighted)
-
-"""
-    pfeaturize(M::AbtractMatrix, α::Float64, β::Float64, weighted::Bool)
-
-Convert continuous feature into binary feature based in 2 parameters: (i) α for strong-ties
-cutoff and (ii) β for weak-ties probability. Weighted version of function weights binary 
-features with it's real value.
-
-# Arguments
-- `M::AbtractMatrix`: Continuous feature matrix
-- `α::AbstractFloat`: Strong-ties cutoff
-- `β::AbstractFloat`: Weak-ties probability
-- `weighted::Bool`: Flag for feature weighting using real value
-"""
-function pfeaturize(M::NamedArray, α::AbstractFloat, β::AbstractFloat, weighted::Bool)
-    # Filter matrix
-    Mf = copy(M)
-    Mf.array = pcutoff.(M.array, α, β, weighted)
-    setnames!(Mf, ["f$f" for f in names(Mf, 2)], 2)
-    return Mf
-end
-
-pfeaturize(M::NamedArray, α::AbstractFloat, weighted::Bool) = pfeaturize(M, α, 0.0, weighted)
-
-"""
-    zfeaturize(M::AbtractMatrix, α::Float64, β::Float64, weighted::Bool)
-
-Convert continuous feature into binary feature based in 2 parameters: (i) α for strong-ties
-z-cutoff and (ii) β for weak-ties z-cutoff. Weighted version of function weights binary
-features with it's real value.
-
-# Arguments
-- `M::AbtractMatrix`: Continuous feature matrix
-- `α::AbstractFloat`: Strong-ties z-cutoff
-- `β::AbstractFloat`: Weak-ties z-cutoff
-- `weighted::Bool`: Flag for feature weighting using real value
-"""
-function zfeaturize(M::NamedArray, zα::AbstractFloat, zβ::AbstractFloat, weighted::Bool)
-    # Convert z-cutoff to cutoff
-    μ = mean(vec(M))
-    σ = std(vec(M))
-    α, β = map(z -> clamp(z * σ + μ, 0.0, 1.0), [zα, zβ])
-
-    # Filter matrix
-    Mf = copy(M)
-    Mf.array = cutoff.(M.array, α, β, weighted)
-    setnames!(Mf, ["f$f" for f in names(Mf, 2)], 2)
-    return Mf
-end
-
-zfeaturize(M::NamedArray, α::AbstractFloat, weighted::Bool) = zfeaturize(M, α, 0.0, weighted)
-
 
 """
     predict(A::NamedMatrix, B::NamedMatrix, names::Tuple; GPU::Bool)
