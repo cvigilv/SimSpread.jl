@@ -23,6 +23,10 @@ In the REPL:
 ## Roadmap
 For release 1.0 and FOSS publication, the following must be done:
 - Improve function naming to better align with SimSpread language
+- Add documentation
+  - Docstring all functions
+  - Add Documenter.jl landing page
+  - Add tutorial and example used of package
 - Add performance metrics:
   - AuROC
   - AuPRC
