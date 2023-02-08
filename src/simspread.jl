@@ -408,7 +408,7 @@ function predict(A::T, B::T, names::Tuple; GPU::Bool=false) where {T<:NamedMatri
     _useGPU(x::AbstractArray) = GPU ? CuArray{Float32}(x) : x
 
     # Target prediction using NBI
-    W = denovoNBI(B.array)
+    W = spread(B.array)
     F = begin
         F = copy(A)
 
@@ -445,7 +445,7 @@ function predict(I::Tuple{T,T}, DT::NamedMatrix; GPU::Bool=false) where {T<:Name
 
     # Target prediction using NBI
     A, B = I
-    W = denovoNBI(B.array)
+    W = spread(B.array)
     F = begin
         F = copy(A)
 
