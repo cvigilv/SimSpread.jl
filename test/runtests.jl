@@ -1,9 +1,3 @@
-#!/usr/local/bin/julia
-#author          :Carlos Vigil Vásquez
-#date            :2023-02-06
-#copyright       :Copyright (C) 2022 Carlos Vigil Vásquez (carlos.vigil.v@gmail.com)
-#license         :Permission to copy and modify is granted under the MIT license
-
 using Test
 using SimSpread
 
