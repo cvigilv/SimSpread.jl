@@ -103,7 +103,17 @@ end
 #
 #     return R_L * N / L
 
+"""
+    f1score(tn::T, fp::T, fn::T, tp::T) where {T<:Integer)
 
+The harmonic mean between precision and recall
+
+# Arguments
+- `tn::Integer` True negatives for a given threshold
+- `fp::Integer` False postives for a given threshold
+- `fn::Integer` False negatives for a given threshold
+- `tp::Integer` True positives for a given threshold
+"""
 function f1score(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     numerator = tp
     denominator = tp + 0.5 * (fp + fn)
@@ -116,6 +126,23 @@ function f1score(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
 end
 f1score(confusion::ROCNums) = f1score(confusion.tn, confusion.fp, confusion.fn, confusion.tp)
 
+
+"""
+    mcc(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
+Matthews correlation coefficient, a special case of the phi coeficient
+Performance metric used for overcoming the class imbalance issues
+
+# Arguments
+- `tn::Integer` True negatives for a given threshold
+- `fp::Integer` False postives for a given threshold
+- `fn::Integer` False negatives for a given threshold
+- `tp::Integer` True positives for a given threshold
+
+# Reference
+1.Chicco, D., Jurman, G. The advantages of the Matthews correlation coefficient
+(MCC) over F1 score and accuracy in binary classification evaluation.
+BMC Genomics 21, 6 (2020).
+"""
 function mcc(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     numerator = (tp * tn) - (fp * fn)
     denominator = sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
@@ -128,6 +155,18 @@ function mcc(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
 end
 mcc(confusion::ROCNums) = mcc(confusion.tn, confusion.fp, confusion.fn, confusion.tp)
 
+
+"""
+    accuracy(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
+The number of all correct predictions divided by the total predicitions
+
+# Arguments
+- `tn::Integer` True negatives for a given threshold
+- `fp::Integer` False postives for a given threshold
+- `fn::Integer` False negatives for a given threshold
+- `tp::Integer` True positives for a given threshold
+
+"""
 function accuracy(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     numerator = tp + tn
     denominator = (tp + tn) + (fp + fn)
@@ -140,6 +179,20 @@ function accuracy(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
 end
 accuracy(confusion::ROCNums) = accuracy(confusion.tn, confusion.fp, confusion.fn, confusion.tp)
 
+
+"""
+    balancedaccuracy(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
+
+The arithmetic mean of sensitivity and specificity,
+its use case is when dealing with imbalanced data
+
+# Arguments
+- `tn::Integer` True negatives for a given threshold
+- `fp::Integer` False postives for a given threshold
+- `fn::Integer` False negatives for a given threshold
+- `tp::Integer` True positives for a given threshold
+
+"""
 function balancedaccuracy(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     tpr = tp / (tp + fn)
     tnr = tn / (tn + fp)
@@ -148,6 +201,17 @@ function balancedaccuracy(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
 end
 balancedaccuracy(confusion::ROCNums) = balancedaccuracy(confusion.tn, confusion.fp, confusion.fn, confusion.tp)
 
+
+"""
+    recall(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
+The fraction of positive samples correctly predicted as postive
+
+# Arguments
+- `tn::Integer` True negatives for a given threshold
+- `fp::Integer` False postives for a given threshold
+- `fn::Integer` False negatives for a given threshold
+- `tp::Integer` True positives for a given threshold
+"""
 function recall(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     p = tp + fn
 
@@ -159,6 +223,17 @@ function recall(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
 end
 recall(confusion::ROCNums) = recall(confusion.tn, confusion.fp, confusion.fn, confusion.tp)
 
+
+"""
+    precision(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
+The fraction of positive predictions that are correct
+
+# Arguments
+- `tn::Integer` True negatives for a given threshold
+- `fp::Integer` False postives for a given threshold
+- `fn::Integer` False negatives for a given threshold
+- `tp::Integer` True positives for a given threshold
+"""
 function precision(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     d = tp + fp
 
