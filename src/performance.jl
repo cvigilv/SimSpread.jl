@@ -109,10 +109,10 @@ end
 The harmonic mean between precision and recall
 
 # Arguments
-- `tn::Integer` True negatives for a given threshold
-- `fp::Integer` False postives for a given threshold
-- `fn::Integer` False negatives for a given threshold
-- `tp::Integer` True positives for a given threshold
+- `tn::Integer` True negatives
+- `fp::Integer` False postives
+- `fn::Integer` False negatives
+- `tp::Integer` True positives
 """
 function f1score(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     numerator = tp
@@ -133,10 +133,10 @@ Matthews correlation coefficient, a special case of the phi coeficient
 Performance metric used for overcoming the class imbalance issues
 
 # Arguments
-- `tn::Integer` True negatives for a given threshold
-- `fp::Integer` False postives for a given threshold
-- `fn::Integer` False negatives for a given threshold
-- `tp::Integer` True positives for a given threshold
+- `tn::Integer` True negatives
+- `fp::Integer` False postives
+- `fn::Integer` False negatives
+- `tp::Integer` True positives
 
 # Reference
 1.Chicco, D., Jurman, G. The advantages of the Matthews correlation coefficient
@@ -161,11 +161,10 @@ mcc(confusion::ROCNums) = mcc(confusion.tn, confusion.fp, confusion.fn, confusio
 The number of all correct predictions divided by the total predicitions
 
 # Arguments
-- `tn::Integer` True negatives for a given threshold
-- `fp::Integer` False postives for a given threshold
-- `fn::Integer` False negatives for a given threshold
-- `tp::Integer` True positives for a given threshold
-
+- `tn::Integer` True negatives
+- `fp::Integer` False postives
+- `fn::Integer` False negatives
+- `tp::Integer` True positives
 """
 function accuracy(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     numerator = tp + tn
@@ -187,11 +186,10 @@ The arithmetic mean of sensitivity and specificity,
 its use case is when dealing with imbalanced data
 
 # Arguments
-- `tn::Integer` True negatives for a given threshold
-- `fp::Integer` False postives for a given threshold
-- `fn::Integer` False negatives for a given threshold
-- `tp::Integer` True positives for a given threshold
-
+- `tn::Integer` True negatives
+- `fp::Integer` False postives
+- `fn::Integer` False negatives
+- `tp::Integer` True positives
 """
 function balancedaccuracy(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     tpr = tp / (tp + fn)
@@ -207,10 +205,10 @@ balancedaccuracy(confusion::ROCNums) = balancedaccuracy(confusion.tn, confusion.
 The fraction of positive samples correctly predicted as postive
 
 # Arguments
-- `tn::Integer` True negatives for a given threshold
-- `fp::Integer` False postives for a given threshold
-- `fn::Integer` False negatives for a given threshold
-- `tp::Integer` True positives for a given threshold
+- `tn::Integer` True negatives
+- `fp::Integer` False postives
+- `fn::Integer` False negatives
+- `tp::Integer` True positives
 """
 function recall(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     p = tp + fn
@@ -229,10 +227,10 @@ recall(confusion::ROCNums) = recall(confusion.tn, confusion.fp, confusion.fn, co
 The fraction of positive predictions that are correct
 
 # Arguments
-- `tn::Integer` True negatives for a given threshold
-- `fp::Integer` False postives for a given threshold
-- `fn::Integer` False negatives for a given threshold
-- `tp::Integer` True positives for a given threshold
+- `tn::Integer` True negatives
+- `fp::Integer` False postives
+- `fn::Integer` False negatives
+- `tp::Integer` True positives
 """
 function precision(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
     d = tp + fp
