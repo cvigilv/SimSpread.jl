@@ -83,7 +83,7 @@ function AuPRC(y::AbstractVector{Bool}, yhat::AbstractVector)
     precisions = precision.(confusion)
 
     # Calculate area under the curve
-    auc = abs(trapz(precisions, recalls))
+    auc = abs(trapz(recalls, precisions))
 
     return auc
 end
