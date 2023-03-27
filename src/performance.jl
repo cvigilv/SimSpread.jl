@@ -83,7 +83,7 @@ function AuPRC(y::AbstractVector{Bool}, yhat::AbstractVector)
     precisions = precision.(confusion)
 
     # Calculate area under the curve
-    auc = abs(trapz(precisions, recalls))
+    auc = abs(trapz(recalls, precisions))
 
     return auc
 end
@@ -290,4 +290,18 @@ Get mean and standard deviation performance of a given metric over a set of conf
 function meanstdperformance(confusion::ROCNums, metric::Function)
     performance = metric.(confusion)
     return mean_and_std(performance)
+end
+
+"""
+    count_zeros(yhat::AbstractVector)
+Counts the number of empty predictions (score equal to 0) in a array of scores
+"""
+function count_zeros(yhat::AbstractVector)
+    count = 0
+    for x in yhat
+        if x == 0
+            count += 1
+        end
+    end
+    return count
 end
