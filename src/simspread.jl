@@ -111,14 +111,11 @@ function prepare!(DT::T, DF::T, Cs::AbstractVector) where {T<:NamedMatrix}
     @assert size(DT, 1) == size(DF, 1) "Different number of compounds!"
 
     # Get names from matrices
-    Fs = [f for f in names(DF, 2) if f ∉ Cs]
+    Fs = [f for f in names(DF, 2) if lstrip(f, 'f') ∉ Cs]
     Ds = [d for d in names(DF, 1) if d ∉ Cs]
     Ts = names(DT, 2)
 
-    if Fs[1] == Ds[1]
-        Fs = ["f$f" for f in Fs]
-        setnames!(DF, Fs, 2)
-    end
+    @assert not(all(sorted(Fs) .== sorted(Ds))) "Features and drugs have the same names!"
 
     # Get dimensions of network
     Nc = length(Cs)
@@ -188,9 +185,7 @@ function prepare(dts::T, dfs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
     T₀ = names(DT₀, 2)
     D₁ = names(DT₁, 1)
 
-    if F₀ == D₀
-        F₀ = ["_$f" for f in F₀]
-    end
+    @assert not(all(sorted(F₀) .== sorted(D₀))) "Features and drugs have the same names!"
 
     # Get dimensions of network
     Nd = length(D₀)
