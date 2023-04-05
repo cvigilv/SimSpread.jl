@@ -10,7 +10,7 @@ detects (early) the positive class.
 
 # Arguments
 - `y::AbstractArray`: Binary class labels. 1 for positive class, 0 otherwise.
-- `̂yhat::AbstractArray`: Prediction values.
+- `̂yhat::AbstractArray`: Prediction scores.
 - `rev::Bool`: True if high values of ``yhat`` correlates to positive class (default = true).
 - `α::AbstractFloat`: Early recognition parameter (default = 20.0).
 
@@ -44,7 +44,7 @@ Area under the Receiver Operator Characteristic curve using the trapezoidal rule
 
 # Arguments
 - `y::AbstractArray`: Binary class labels. 1 for positive class, 0 otherwise.
-- `̂yhat::AbstractArray`: Prediction values.
+- `̂yhat::AbstractArray`: Prediction scores.
 """
 function AuROC(y::AbstractVector{Bool}, yhat::AbstractVector)
     @assert length(y) == length(yhat) "The number of scores must be equal to the number of labels"
@@ -69,7 +69,7 @@ Area under the Precision-Recall curve using the trapezoidal rule.
 
 # Arguments
 - `y::AbstractArray`: Binary class labels. 1 for positive class, 0 otherwise.
-- `̂yhat::AbstractArray`: Prediction values.
+- `̂yhat::AbstractArray`: Prediction scores.
 """
 function AuPRC(y::AbstractVector{Bool}, yhat::AbstractVector)
     @assert length(y) == length(yhat) "The number of scores must be equal to the number of labels"
