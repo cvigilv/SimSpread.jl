@@ -115,7 +115,7 @@ function prepare!(DT::T, DF::T, Cs::AbstractVector) where {T<:NamedMatrix}
     Ds = [d for d in names(DF, 1) if d ∉ Cs]
     Ts = names(DT, 2)
 
-    @assert not(all(sorted(Fs) .== sorted(Ds))) "Features and drugs have the same names!"
+    @assert all(sort(Fs) .!= sort(Ds)) "Features and drugs have the same names!"
 
     # Get dimensions of network
     Nc = length(Cs)
@@ -185,7 +185,7 @@ function prepare(dts::T, dfs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
     T₀ = names(DT₀, 2)
     D₁ = names(DT₁, 1)
 
-    @assert not(all(sorted(F₀) .== sorted(D₀))) "Features and drugs have the same names!"
+    @assert all(sort(F₀) .!= sort(D₀)) "Features and drugs have the same names!"
 
     # Get dimensions of network
     Nd = length(D₀)
