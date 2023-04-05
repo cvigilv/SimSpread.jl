@@ -5,6 +5,24 @@ using SimSpread
 #     read_namedmatrix
 #     k,
 # end
+@testset "prepare!" begin
+    DF = NamedArray([1 0 1; 1 1 0; 0 1 1])
+    DT = NamedArray([0 1; 1 1; 1 0])
+    C = ["D1"]
+    setnames!(DF, ["D$i" for i in 1:3], 1)
+    setnames!(DF, ["fD$i" for i in 1:3], 2)
+    setnames!(DT, ["D$i" for i in 1:3], 1)
+    setnames!(DT, ["T$i" for i in 1:2], 2)
+
+    A, B = prepare!(DT, DF, C)
+    @test all(names(A, 1) .== names(A, 2))
+    @test all(names(B, 1) .== names(B, 2))
+    @test all(names(A, 1) .== ["D1", "D2", "D3", "fD2", "fD3", "T1", "T2"])
+    @test all(names(B, 1) .== ["D1", "D2", "D3", "fD2", "fD3", "T1", "T2"])
+
+    setnames!(DF, ["D$i" for i in 1:3], 2)
+    @test_throws AssertionError("Features and drugs have the same names!") prepare!(DT, DF, C)
+end
 
 @testset "cutoff" begin
     x = 0.8
