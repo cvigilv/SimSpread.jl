@@ -188,9 +188,11 @@ function prepare(dts::T, dfs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
     T₀ = names(DT₀, 2)
     D₁ = names(DT₁, 1)
 
+    # Fix names 
     if F₀ == D₀
-        F₀ = ["_$f" for f in F₀]
+        F₀ = ["f_$f" for f in F₀]
     end
+
 
     # Get dimensions of network
     Nd = length(D₀)
@@ -286,18 +288,15 @@ value.
 # Arguments
 - `M::AbtractMatrix`: Continuous feature matrix
 - `α::AbstractFloat`: Strong-ties cutoff
-- `β::AbstractFloat`: Weak-ties cutoff
 - `weighted::Bool`: Flag for feature weighting using real value
 """
-function featurize(M::NamedArray, α::AbstractFloat, β::AbstractFloat, weighted::Bool)
+function featurize(M::NamedArray, α::AbstractFloat, weighted::Bool)
     # Filter matrix
     Mf = copy(M)
-    Mf.array = cutoff.(M.array, α, β, weighted)
+    Mf.array = cutoff.(M.array, α, weighted)
     setnames!(Mf, ["f$f" for f in names(Mf, 2)], 2)
     return Mf
 end
-
-featurize(M::NamedArray, α::AbstractFloat, weighted::Bool) = featurize(M, α, 0.0, weighted)
 
 """
     predict(A::NamedMatrix, B::NamedMatrix, names::Tuple; GPU::Bool)
