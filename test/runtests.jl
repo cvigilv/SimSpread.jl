@@ -1,10 +1,15 @@
 using Test
 using SimSpread
+using NamedArrays
 
-# @testset "General utilities" begin
-#     read_namedmatrix
-#     k,
-# end
+# TODO: Add general utilities unit tests
+#=
+@testset "General utilities" begin
+    read_namedmatrix
+    k,
+end
+=#
+
 @testset "prepare!" begin
     DF = NamedArray([1 0 1; 1 1 0; 0 1 1])
     DT = NamedArray([0 1; 1 1; 1 0])
@@ -54,25 +59,28 @@ end
     @test cutoff(z, γ, true) ≈ zeros(Float64, 11)
 end
 
-# @testset "Performance assessment - Metrics" begin
-#     y = []
-#     yhat = []
-#     @test BEDROC(y, yhat) ≈ V
-#     @test AuPRC(y, yhat) ≈ V
-#     @test AuROC(y, yhat) ≈ V
-#     @test f1score(y, yhat) ≈ V
-#     @test mcc(y, yhat) ≈ V
-#     @test accuracy(y, yhat) ≈ V
-#     @test balancedaccuracy(y, yhat) ≈ V
-#     @test recall(y, yhat) ≈ V
-#     @test precision(y, yhat) ≈ V
-# end
-#
-# @testset "Performance assessment - Moments" begin
-#     y = []
-#     yhat = []
-#     @test performanceatL(y, yhat) ≈ V
-#     @test meanperformance(y, yhat) ≈ V
-#     @test meanstdperformance(y, yhat) ≈ V
-#     @test maxperformance(y, yhat) ≈ V 
-# end
+# TODO: Add performance metrics unit tests
+#=
+@testset "Performance assessment - Metrics" begin
+    y = []
+    yhat = []
+    @test BEDROC(y, yhat) ≈ V
+    @test AuPRC(y, yhat) ≈ V
+    @test AuROC(y, yhat) ≈ V
+    @test f1score(y, yhat) ≈ V
+    @test mcc(y, yhat) ≈ V
+    @test accuracy(y, yhat) ≈ V
+    @test balancedaccuracy(y, yhat) ≈ V
+    @test recall(y, yhat) ≈ V
+    @test precision(y, yhat) ≈ V
+end
+
+@testset "Performance assessment - Moments" begin
+    y = []
+    yhat = []
+    @test performanceatL(y, yhat) ≈ V
+    @test meanperformance(y, yhat) ≈ V
+    @test meanstdperformance(y, yhat) ≈ V
+    @test maxperformance(y, yhat) ≈ V
+end
+=#
