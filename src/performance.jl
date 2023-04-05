@@ -170,22 +170,82 @@ function precision(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
 end
 precision(confusion::ROCNums) = precision(confusion.tn, confusion.fp, confusion.fn, confusion.tp)
 
-function performanceatL(
-    y::AbstractVector{Bool},
-    yhat::AbstractVector,
-    metric::Function,
-    L::Integer=20
-)
-    @assert length(y) == length(yhat) "The number of scores must be equal to the number of labels"
+"""
+    recallatL(y, yhat, grouping, L)
 
-    # Sort predictions by score
-    order = sortperm(yhat, rev=true)
+Get recall@L as proposed by Wu, et al (2017).
 
-    # Cuantify performance using top L predictions
-    yₗ = Int64.(first(y[order], L))
-    yhatₗ = Int64.(ones(L))
+# Arguments
+- `y::AbstractVector`: Binary class labels. 1 for positive class, 0 otherwise.
+- `̂yhat::AbstractVector`: Prediction score.
+- `grouping::AbstractVector`: Group labels.
+- `L::Integer`: Length to consider to calculate metrics (default = 20).
+"""
+function recallatL(y, yhat, grouping, L::Integer=20)
+    @assert L > 0                     "Please use a list length greater than 0 (L > 0)"
+    @assert length(y) == length(yhat) "Number of predictions and labels don't match"
+    @assert length(y) > L             "Number of labels is less than length (L > y)"
+    @assert length(yhat) > L          "Number of predictions is less than length (L > yhat)"
 
-    return metric(roc(yₗ, yhatₗ))
+    performance = []
+    for group in unique(grouping)
+        # Get prediction-label pairs for group
+        y_g = y[grouping .== group]
+        yhat_g = yhat[grouping .== group]
+
+        # Sort predictions by score
+        order = sortperm(yhat_g, rev=true)
+        y_g = y_g[order]
+        yhat_g = y_g[order]
+
+        # Calculate recall@n for given group
+        Xi = sum(y_g)
+        Xi_L = sum(first(y_g, L))
+
+        if Xi > 0
+            push!(performance, Xi_L / Xi)
+        else
+            push!(performance, NaN)
+        end
+    end
+
+    return mean(performance)
+end
+
+"""
+    precisionatL(y, yhat, grouping, L)
+
+Get precision@L as proposed by Wu, et al (2017).
+
+# Arguments
+- `y::AbstractVector`: Binary class labels. 1 for positive class, 0 otherwise.
+- `̂yhat::AbstractVector`: Prediction score.
+- `grouping::AbstractVector`: Group labels.
+- `L::Integer`: Length to consider to calculate metrics (default = 20).
+"""
+function precisionatL(y, yhat, grouping, L)
+    @assert L > 0                     "Please use a list length greater than 0 (L > 0)"
+    @assert length(y) == length(yhat) "Number of predictions and labels don't match"
+    @assert length(y) > L             "Number of labels is less than length (L > y)"
+    @assert length(yhat) > L          "Number of predictions is less than length (L > yhat)"
+
+    performance = []
+    for group in unique(grouping)
+        # Get prediction-label pairs for group
+        y_g = y[grouping .== group]
+        yhat_g = yhat[grouping .== group]
+
+        # Sort predictions by score
+        order = sortperm(yhat_g, rev=true)
+        y_g = y_g[order]
+        yhat_g = y_g[order]
+
+        # Calculate precisionj@n for given group
+        Xi_L = sum(first(y_g, L))
+        push!(performance, Xi_L / L)
+    end
+
+    return mean(performance)
 end
 
 """
