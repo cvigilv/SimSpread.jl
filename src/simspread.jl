@@ -95,7 +95,7 @@ function cutoff!(M::AbstractVecOrMat{T}, α::T, weighted::Bool=false) where {T<:
 end
 
 """
-    prepare!(DT::T, DF::T, Cs::AbstractVector) where {T<:NamedMatrix}
+    prepare(DT::NamedMatrix, DF::NamedMatrix, Cs::AbstractVector)
 
 Prepare compound-feature-drug-target network adjacency matrix for *de novo* NBI prediction.
 
@@ -107,7 +107,7 @@ Prepare compound-feature-drug-target network adjacency matrix for *de novo* NBI 
 # Extended help
 This implementation is for k-fold or leave-one-out cross-validation.
 """
-function prepare!(DT::T, DF::T, Cs::AbstractVector) where {T<:NamedMatrix}
+function prepare(DT::NamedMatrix, DF::NamedMatrix, Cs::AbstractVector)
     @assert size(DT, 1) == size(DF, 1) "Different number of compounds!"
 
     # Get names from matrices
