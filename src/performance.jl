@@ -322,16 +322,16 @@ Get recall@L as proposed by Wu, et al (2017).
 - `L::Integer`: Length to consider to calculate metrics (default = 20).
 """
 function recallatL(y, yhat, grouping, L::Integer=20)
-    @assert L > 0                     "Please use a list length greater than 0 (L > 0)"
+    @assert L > 0 "Please use a list length greater than 0 (L > 0)"
     @assert length(y) == length(yhat) "Number of predictions and labels don't match"
-    @assert length(y) > L             "Number of labels is less than length (L > y)"
-    @assert length(yhat) > L          "Number of predictions is less than length (L > yhat)"
+    @assert length(y) > L "Number of labels is less than length (L > y)"
+    @assert length(yhat) > L "Number of predictions is less than length (L > yhat)"
 
     performance = []
     for group in unique(grouping)
         # Get prediction-label pairs for group
-        y_g = y[grouping .== group]
-        yhat_g = yhat[grouping .== group]
+        y_g = y[grouping.==group]
+        yhat_g = yhat[grouping.==group]
 
         # Sort predictions by score
         order = sortperm(yhat_g, rev=true)
@@ -372,8 +372,8 @@ function precisionatL(y, yhat, grouping, L)
     performance = []
     for group in unique(grouping)
         # Get prediction-label pairs for group
-        y_g = y[grouping .== group]
-        yhat_g = yhat[grouping .== group]
+        y_g = y[grouping.==group]
+        yhat_g = yhat[grouping.==group]
 
         # Sort predictions by score
         order = sortperm(yhat_g, rev=true)
