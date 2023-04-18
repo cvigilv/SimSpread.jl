@@ -115,6 +115,8 @@ The harmonic mean between precision and recall
 - `tp::Integer` True positives
 """
 function f1score(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
+    @assert tn + fp + fn + tp > 0 "Confusion matrix sums zero!"
+
     numerator = tp
     denominator = tp + 0.5 * (fp + fn)
 
@@ -224,6 +226,8 @@ The number of all correct predictions divided by the total predicitions
 - `tp::Integer` True positives
 """
 function accuracy(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
+    @assert tn + fp + fn + tp > 0 "Confusion matrix sums zero!"
+
     numerator = tp + tn
     denominator = (tp + tn) + (fp + fn)
 
@@ -249,6 +253,8 @@ its use case is when dealing with imbalanced data
 - `tp::Integer` True positives
 """
 function balancedaccuracy(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
+    @assert tn + fp + fn + tp > 0 "Confusion matrix sums zero!"
+
     tpr = tp / (tp + fn)
     tnr = tn / (tn + fp)
 
@@ -268,6 +274,8 @@ The fraction of positive samples correctly predicted as postive
 - `tp::Integer` True positives
 """
 function recall(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
+    @assert tn + fp + fn + tp > 0 "Confusion matrix sums zero!"
+
     p = tp + fn
 
     if p == 0
@@ -290,6 +298,8 @@ The fraction of positive predictions that are correct
 - `tp::Integer` True positives
 """
 function precision(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
+    @assert tn + fp + fn + tp > 0 "Confusion matrix sums zero!"
+
     d = tp + fp
 
     if d == 0
@@ -354,10 +364,10 @@ Get precision@L as proposed by Wu, et al (2017).
 - `L::Integer`: Length to consider to calculate metrics (default = 20).
 """
 function precisionatL(y, yhat, grouping, L)
-    @assert L > 0                     "Please use a list length greater than 0 (L > 0)"
+    @assert L > 0 "Please use a list length greater than 0 (L > 0)"
     @assert length(y) == length(yhat) "Number of predictions and labels don't match"
-    @assert length(y) > L             "Number of labels is less than length (L > y)"
-    @assert length(yhat) > L          "Number of predictions is less than length (L > yhat)"
+    @assert length(y) > L "Number of labels is less than length (L > y)"
+    @assert length(yhat) > L "Number of predictions is less than length (L > yhat)"
 
     performance = []
     for group in unique(grouping)
