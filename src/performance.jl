@@ -126,6 +126,43 @@ function f1score(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
 end
 f1score(confusion::ROCNums) = f1score(confusion.tn, confusion.fp, confusion.fn, confusion.tp)
 
+"""
+    mcc(a::T, b::T, ϵ::AbstractFloat = 0.0001) where {T<:Integer}
+
+Matthews correlation coefficient using calculus approximation for when
+FN+TN, FP+TN, TP+FN or TP+FP equals zero.
+
+# Arguments
+- `a::Integer` = Value of position `a` in confusion matrix
+- `b::Integer` = Value of position `b` in confusion matrix
+- `ϵ::AbstractFloat` = Approximation coefficient (default = floatmin(Float64))
+
+# Extended help
+The confusion matrix in a binary prediction is comprised of 4 distinct positions:
+```
+                    | Predicted positive     Predicted negative
+    ----------------+--------------------------------------------
+    Actual positive |  True positives (TP)   False negatives (FN)
+    Actual negative | False positives (FP)    True negatives (TN)
+```
+
+In the case a row or column of the confusion matrix equals zero, MCC is undefined.
+Therefore, to correctly use MCC with this approximation, arguments `a` and `b` are
+defined as follows:
+
+- If "Predictive positive" column is zero, `a` is TN and `b` is FN
+- If "Predictive negative" column is zero, `a` is TP and `b` is FP
+- If "Actual positive" row is zero, `a` is TN and `b` is FP
+- If "Actual negative" row is zero, `a` is TP and `b` is FN
+
+# Reference
+1.Chicco, D., Jurman, G. The advantages of the Matthews correlation coefficient
+(MCC) over F1 score and accuracy in binary classification evaluation.
+BMC Genomics 21, 6 (2020).
+"""
+function mcc(a::T, b::T, ϵ::AbstractFloat=floatmin(Float64)) where {T<:Integer}
+    return (a*ϵ - b*ϵ)/ sqrt((a+b)*(a+ϵ)*(b+ϵ)*(ϵ+ϵ))
+end
 
 """
     mcc(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
@@ -144,12 +181,32 @@ Performance metric used for overcoming the class imbalance issues
 BMC Genomics 21, 6 (2020).
 """
 function mcc(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
-    numerator = (tp * tn) - (fp * fn)
-    denominator = sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+    @assert tn + fp + fn + tp > 0 "Confusion matrix sums zero!"
 
-    if denominator == 0
-        return NaN
+    # Calculate row and column-wise sum of confusion matrix
+    p_pred = tp + fp
+    n_pred = fn + tn
+    p_actual = tp + fn
+    n_actual = fp + tn
+
+    # Use approximation if the sum of either a row or column is zero
+    # NOTE: Based in the reference bellow, some confusion matrices can take an
+    #       indefinite form 0/0, therefore to ensure correct handling of those
+    #       cases we opt to reimplement the calculus approximation instead of
+    #       returning a "missing" or "nan" value. Please refer to the reference
+    #       section in the docstrings for more information regarding this case.
+    if p_pred == 0
+        return mcc(tn, fn)
+    elseif n_pred == 0
+        return mcc(tp, fp)
+    elseif p_actual == 0
+        return mcc(tn, fp)
+    elseif n_actual == 0
+        return mcc(tp, fn)
     else
+        numerator = (tp * tn) - (fp * fn)
+        denominator = sqrt(p_pred * n_pred * p_actual * n_actual)
+
         return numerator / denominator
     end
 end
