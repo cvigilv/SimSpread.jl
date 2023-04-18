@@ -1,5 +1,5 @@
 """
-    BEDROC(y, yhat; rev = true, α = 20.0)
+    BEDROC(y::AbstractVector{Bool}, yhat::AbstractVector; rev::Bool=true, α::AbstractFloat=20.0)
 
 The Boltzmann Enhanced Descrimination of the Receiver Operator Characteristic (BEDROC) score
 is a modification of the Receiver Operator Characteristic (ROC) score that allows for a factor
@@ -38,7 +38,7 @@ function BEDROC(y::AbstractVector{Bool}, yhat::AbstractVector; rev::Bool=true, �
 end
 
 """
-    AuROC(y::AbstractArray{Bool}, yhat::AbstractVector{Number})
+    AuROC(y::AbstractVector{Bool}, yhat::AbstractVector)
 
 Area under the Receiver Operator Characteristic curve using the trapezoidal rule.
 
@@ -63,7 +63,7 @@ function AuROC(y::AbstractVector{Bool}, yhat::AbstractVector)
 end
 
 """
-    AuPRC(y::AbstractArray{Bool}, yhat::AbstractArray{Number})
+    AuPRC(y::AbstractVector{Bool}, yhat::AbstractVector)
 
 Area under the Precision-Recall curve using the trapezoidal rule.
 
@@ -104,7 +104,7 @@ end
 #     return R_L * N / L
 
 """
-    f1score(tn::T, fp::T, fn::T, tp::T) where {T<:Integer)
+    f1score(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
 
 The harmonic mean between precision and recall
 
