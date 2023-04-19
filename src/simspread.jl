@@ -1,8 +1,23 @@
 """
-    spread(F₀::AbstractMatrix{Float64})
+    spread(G::AbstractMatrix{Float64})
+
+Calculate the transfer matrix for the adyacency matrix of the trilayered feature-source-target
+network.
 
 # Arguments
-- `F₀::AbstractMatrix{Float64}`: Trilayered SimSpread network adjacency matrix
+- `F₀::AbstractMatrix{Float64}`: Trilayered feature-source-target network adjacency matrix.
+
+# Example
+Refer to tutorial notebooks for examples.
+
+# Extended help
+Potential interactions between nodes in a graph can be identified by using resource diffusion
+processes in the feature-source-target network, namely aforementioned graph `G`. For each node
+nᵢ in the network, it has initial resources located in both its neighboring nodes and its
+features. Initially, each feature and each neighboring node of nᵢ equally spread their resources
+to neighboring nodes. Subsequently, each of those nodes equally spreads its resources to
+neighbor nodes. Thus, nᵢ will obtain final resources located in several neighboring nodes,
+suggesting that nᵢ may have potential interactions with these nodes.
 
 # References
 1. Wu, et al (2016). SDTNBI: an integrated network and chemoinformatics tool for
@@ -12,9 +27,8 @@
    Chemical Similarity-Guided Network-Based Inference. International Journal of Molecular
    Sciences, 23(17), 9666. https://doi.org/10.3390/ijms23179666
 """
-function spread(F₀::AbstractMatrix{Float64})
-    # Transfer matrix
-    W = F₀ ./ k(F₀)
+function spread(G::AbstractMatrix{Float64})
+    W = G ./ k(G)
     replace!(W, Inf => 0.0)
     replace!(W, NaN => 0.0)
 
@@ -36,8 +50,8 @@ end
 Transform `x` based in SimSpread's similarity cutoff function.
 
 # Arguments
-- `x::T` : Value to transform
-- `α::T` : Similarity matrix
+- `x::AbstractFloat` : Value to transform
+- `α::AbstractFloat` : Similarity cutoff
 - `weighted::Bool` : Apply weighting function to outcome (default = false)
 """
 function cutoff(x::T, α::T, weighted::Bool=false) where {T<:AbstractFloat}
@@ -54,8 +68,8 @@ end
 Transform `x` based in SimSpread's similarity cutoff function, overwriting `x`.
 
 # Arguments
-- `x::T` : Value to transform
-- `α::T` : Similarity matrix
+- `x::AbstractFloat` : Value to transform
+- `α::AbstractFloat` : Similarity cutoff
 - `weighted::Bool` : Apply weighting function to outcome (default = false)
 """
 function cutoff!(x::T, α::T, weighted::Bool=false) where {T<:AbstractFloat}
@@ -66,11 +80,11 @@ end
 """
     cutoff(x::AbstractMatrix{T}, α::T, weighted::Bool=false) where {T<:AbstractFloat}
 
-Transform `M` based in SimSpread's similarity cutoff function.
+Transform vector or matrix `M` based in SimSpread's similarity cutoff function.
 
 # Arguments
-- `M::T` : Matrix or Vector to transform
-- `α::T` : Similarity threshold
+- `M::AbstractVecOrMat{AbstractFloat}` : Matrix or Vector to transform
+- `α::AbstractFloat` : Similarity cutoff
 - `weighted::Bool` : Apply weighting function to outcome (default = false)
 """
 function cutoff(M::AbstractVecOrMat{T}, α::T, weighted::Bool=false) where {T<:AbstractFloat}
@@ -83,11 +97,11 @@ end
 """
     cutoff!(M::AbstractVecOrMat{T}, α::T, weighted::Bool=false) where {T<:AbstractFloat}
 
-Transform `M` based in SimSpread's similarity cutoff function, overwriting `M`.
+Transform vector or matrix `M` based in SimSpread's similarity cutoff function, overwriting `M`.
 
 # Arguments
-- `M::T` : Matrix or Vector to transform
-- `α::T` : Similarity threshold
+- `M::AbstractVecOrMat{AbstractFloat}` : Matrix or Vector to transform
+- `α::AbstractFloat` : Similarity threshold
 - `weighted::Bool` : Apply weighting function to outcome (default = false)
 """
 function cutoff!(M::AbstractVecOrMat{T}, α::T, weighted::Bool=false) where {T<:AbstractFloat}
@@ -97,12 +111,13 @@ end
 """
     prepare(DT::NamedMatrix, DF::NamedMatrix, Cs::AbstractVector)
 
-Prepare compound-feature-drug-target network adjacency matrix for *de novo* NBI prediction.
+Prepare query-feature-source-target network adjacency matrix for *de novo* network-based inference
+prediction.
 
 # Arguments
-- `DT::NamedMatrix`: Drug-Target adjacency matrix
-- `DF::NamedMatrix`: Drug-Feature adjacency matrix
-- `Cs::AbstractVector`: Compounds to predict targets
+- `DT::NamedMatrix`: Source-target bipartite network adjacency matrix
+- `DF::NamedMatrix`: Source-feature bipartite adjacency matrix
+- `Cs::AbstractVector`: Source nodes to whom predict targets
 
 # Extended help
 This implementation is for k-fold or leave-one-out cross-validation.
@@ -162,14 +177,12 @@ end
 """
     prepare(dts::T, dfs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
 
-Prepare compound-feature-drug-target network adjacency matrix for *de novo* NBI predictions.
+Prepare query-feature-source-target network adjacency matrix for *de novo* network-based inference
+prediction.
 
 # Arguments
-- `dts::Tuple{NamedMatrix,NamedMatrix}` : Drug-Target adjacency matrices
-- `dfs::Tuple{NamedMatrix,NamedMatrix}` : Drug-Feature adjacency matrices
-
-# Extended help
-This implementation is for time-split cross-validation.
+- `dts::Tuple{NamedMatrix,NamedMatrix}` : Source-target bipartite graph adjacency matrices
+- `dfs::Tuple{NamedMatrix,NamedMatrix}` : Source-feature bipartite graph adjacency matrices
 """
 function prepare(dts::T, dfs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
     # Unpack matrices tuples
@@ -225,6 +238,8 @@ function prepare(dts::T, dfs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
 
     return namedA, namedB
 end
+prepare(Xtrain::T, Xtest::T, ytrain::T, ytest::T) where {T<:NamedMatrix} =
+    prepare((Xtrain, Xtest), (ytrain, ytest))
 
 """
     split(DT::NamedArray, k::Int64, rng::Int64)
@@ -238,7 +253,6 @@ Split drugs `D` into `k` groups, extract their edges and append to cross-validat
 - `DT::AbstractMatrix`: Drug-Target rectangular adjacency matrix.
 - `k::Int64`: Number of groups to use in data splitting.
 - `rng::Int64`: Seed used for data splitting.
-
 """
 function Base.split(G::NamedArray, ngroups::Int64; seed::Int64=1)
     # Get array of drugs in adjacency matrix
@@ -256,34 +270,18 @@ function Base.split(G::NamedArray, ngroups::Int64; seed::Int64=1)
     return groups
 end
 
-
 """
-    clamp(val::Number, vmin::Number, vmax::Number)
+    featurize(M::NamedArray, α::AbstractFloat, weighted::Bool)
 
-Restrict a value to a given range.
-
-# Arguments
-- `val::Number` : Value to clamp
-- `vmin::Number` : Value floor
-- `vmax::Number` : Value roof
-"""
-function clamp(val::Number, vmin::Number, vmax::Number)
-    val < vmin ? vmin : val > vmax ? vmax : val
-end
-
-"""
-    featurize(M::NamedArray, α::Float64, β::Float64, weighted::Bool)
-
-Convert continuous feature into binary feature based in 2 cutoffs: (i) α for strong-ties and
-(ii) β for weak-ties. Weighted version of function weights binary features with it's real
-value.
+Transform, continuous feature into binary feature based in a given cutoff α, either in
+a binary or weighted fashion.
 
 # Arguments
 - `M::AbtractMatrix`: Continuous feature matrix
-- `α::AbstractFloat`: Strong-ties cutoff
-- `weighted::Bool`: Flag for feature weighting using real value
+- `α::AbstractFloat`: Featurization cutoff
+- `weighted::Bool` : Apply weighting function to outcome (default = false)
 """
-function featurize(M::NamedArray, α::AbstractFloat, weighted::Bool)
+function featurize(M::NamedArray, α::AbstractFloat, weighted::Bool=false)
     # Filter matrix
     Mf = copy(M)
     Mf.array = cutoff.(M.array, α, weighted)
@@ -292,83 +290,115 @@ function featurize(M::NamedArray, α::AbstractFloat, weighted::Bool)
 end
 
 """
-    predict(A::NamedMatrix, B::NamedMatrix, names::Tuple; GPU::Bool)
+    featurize!(M::NamedArray, α::AbstractFloat, weighted::Bool = false)
 
-TODO: Add short description to `predict`
+Transform, in place, continuous feature into binary feature based in a given cutoff α, either in
+a binary or weighted fashion.
 
 # Arguments
-- `A::NamedMatrix`: Compound-Feature-Drug-Target initial resources adjacency matrix
-- `B::NamedMatrix`: Feature-Drug-Target initial resources adjacency matrix
-- `names::Tuple`: Rows & columns named indices
-- `GPU::Bool`: (default = false)
+- `M::NamedArray` : Continuous feature matrix
+- `α::AbstractFloat` : Featurization cutoff
+- `weighted::Bool` : Apply weighting function to outcome (default = false)
+
+# References
+1. Vigil-Vásquez & Schüller (2022). De Novo Prediction of Drug Targets and Candidates by
+   Chemical Similarity-Guided Network-Based Inference. International Journal of Molecular
+   Sciences, 23(17), 9666. https://doi.org/10.3390/ijms23179666
 """
-function predict(A::T, B::T, names::Tuple; GPU::Bool=false) where {T<:NamedMatrix}
-    # GPU calculations helper functions
-    _useGPU(x::AbstractArray) = GPU ? CuArray{Float32}(x) : x
-
-    # Target prediction using NBI
-    W = spread(B.array)
-    F = begin
-        F = copy(A)
-
-        Aarr = _useGPU(A.array)
-        Warr = _useGPU(W)
-        F.array = Aarr * Warr^2
-
-        # Free GPU memory
-        if GPU
-            CUDA.unsafe_free!(Aarr)
-            CUDA.unsafe_free!(Warr)
-        end
-        return F
-    end
-
-    R = F[Symbol.(names[1]), Symbol.(names[2])]
-
-    return R
+function featurize!(M::NamedArray, α::AbstractFloat, weighted::Bool)
+    M.array = cutoff.(M.array, α, weighted)
+    setnames!(M, ["f$f" for f in names(M, 2)], 2)
 end
 
 """
-    predict(I::Tuple{T,T}, DT::T; GPU::Bool) where {T<:NamedArray}
+    predict(I::Tuple{T,T}, ST::T; GPU::Bool=false) where {T<:NamedMatrix}
 
-TODO: Add short description to `predict`
+Predict interactions between query and target nodes using *de novo* network-based inference
+model proposed by Wu, et al (2016).
 
 # Arguments
-- `I::Tuple{NamedMatrix,NamedMatrix}`: *De novo* initial resources adjacency matrices
-- `DT::NamedMatrix`: Drug-target adjacency matrix
+- `I::Tuple{NamedMatrix,NamedMatrix}`: Feature-source-target trilayered adjacency matrices
+- `ST::NamedMatrix`: Source-target biaprtite adjacency matrix
 - `GPU::Bool`: Use GPU acceleration for calculation (default = false)
+
+# References
+1. Wu, et al (2016). SDTNBI: an integrated network and chemoinformatics tool for
+   systematic prediction of drug–target interactions and drug repositioning. Briefings in
+   Bioinformatics, bbw012. https://doi.org/10.1093/bib/bbw012
+2. Vigil-Vásquez & Schüller (2022). De Novo Prediction of Drug Targets and Candidates by
+   Chemical Similarity-Guided Network-Based Inference. International Journal of Molecular
+   Sciences, 23(17), 9666. https://doi.org/10.3390/ijms23179666
 """
-function predict(I::Tuple{T,T}, DT::NamedMatrix; GPU::Bool=false) where {T<:NamedMatrix}
+function predict(I::Tuple{T,T}, ST::T; GPU::Bool=false) where {T<:NamedMatrix}
     # GPU calculations helper functions
     _useGPU(x::AbstractArray) = GPU ? CuArray{Float32}(x) : x
 
     # Target prediction using NBI
     A, B = I
     W = spread(B.array)
-    F = begin
-        F = copy(A)
+    F = copy(A)
 
-        Aarr = _useGPU(A.array)
-        Warr = _useGPU(W)
-        F.array = Aarr * Warr^2
+    Aarr = _useGPU(A.array)
+    Warr = _useGPU(W)
+    F.array = Aarr * Warr^2
 
-        # Free GPU memory
-        if GPU
-            CUDA.unsafe_free!(Aarr)
-            CUDA.unsafe_free!(Warr)
-        end
-
-        return F
+    # Free GPU memory
+    if GPU
+        CUDA.unsafe_free!(Aarr)
+        CUDA.unsafe_free!(Warr)
     end
 
-    R = F[names(DT, 1), names(DT, 2)]
+    R = F[names(ST, 1), names(ST, 2)]
+    return R
+end
+predict(A::T, B::T, ST::T; GPU::Bool=false) where {T<:NamedMatrix} =
+    predict((A, B), ST; GPU=GPU)
+
+"""
+    predict(A::T, ST::T; GPU::Bool=false) where {T<:NamedMatrix}
+
+Predict interactions between query and target nodes using *de novo* network-based inference
+model proposed by Wu, et al (2016).
+
+# Arguments
+- `A::NamedMatrix`: Feature-source-target trilayered adjacency matrix
+- `ST::NamedMatrix`: Source-target bipartite adjacency matrix
+- `GPU::Bool`: Use GPU acceleration for calculation (default = false)
+
+# References
+1. Wu, et al (2016). SDTNBI: an integrated network and chemoinformatics tool for
+   systematic prediction of drug–target interactions and drug repositioning. Briefings in
+   Bioinformatics, bbw012. https://doi.org/10.1093/bib/bbw012
+2. Vigil-Vásquez & Schüller (2022). De Novo Prediction of Drug Targets and Candidates by
+   Chemical Similarity-Guided Network-Based Inference. International Journal of Molecular
+   Sciences, 23(17), 9666. https://doi.org/10.3390/ijms23179666
+"""
+function predict(A::T, ST::T; GPU::Bool=false) where {T<:NamedMatrix}
+    # GPU calculations helper functions
+    _useGPU(x::AbstractArray) = GPU ? CuArray{Float32}(x) : x
+
+    # Target prediction using NBI
+    W = spread(A.array)
+    F = copy(A)
+
+    Aarr = _useGPU(A.array)
+    Warr = _useGPU(W)
+    F.array = Aarr * Warr^2
+
+    # Free GPU memory
+    if GPU
+        CUDA.unsafe_free!(Aarr)
+        CUDA.unsafe_free!(Warr)
+    end
+
+    R = F[names(ST, 1), names(ST, 2)]
     return R
 end
 
 """
     clean!(R::NamedArray, A::NamedArray, DT::NamedArray)
 
-Flag errors from cross-validation splitting in place.
+Flag, in place, erroneous prediction from cross-validation splitting.
 
 # Arguments
 - `R::NamedArray`: Predicted drug-target interactions adjacency matrix
@@ -376,16 +406,14 @@ Flag errors from cross-validation splitting in place.
 - `DT::NamedArray`: Ground-truth drug-target interactions adjacency matrix
 """
 function clean!(R::NamedArray, A::NamedArray, DT::NamedArray)
-    # Clean predictions adjacancy matrix R from disconnected targets
+    # Clean predictions adjacency matrix R from disconnected targets
     disconnected = 0
     for (tᵢ, k) in zip(names(DT, 2), k(A[names(DT, 1), names(DT, 2)]))
         if k == 0
             disconnected += 1
             R[:, tᵢ] .= -99
-            R[tᵢ, :] .= -99
         end
     end
-    # @warn "$disconnected targets got disconnected, flagging predictions with '-99'"
 end
 
 """
