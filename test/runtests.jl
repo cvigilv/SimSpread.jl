@@ -3,39 +3,15 @@ using SimSpread
 using NamedArrays
 using MLBase
 
-# TODO: Add general utilities unit tests
-#=
+# TODO: Add unittests
 @testset "General utilities" begin
-    read_namedmatrix
-    k,
+    @testset "read_namedmatrix" begin @test skip = true end
+    @testset "k" begin @test skip = true end
 end
-=#
 
 @testset "SimSpread Core" begin
-    @testset "prepare" begin
-        # Prepare test
-        DF = NamedArray([1 0 1; 1 1 0; 0 1 1])
-        DT = NamedArray([0 1; 1 1; 1 0])
-        C = ["D1"]
-        setnames!(DF, ["D$i" for i in 1:3], 1)
-        setnames!(DF, ["fD$i" for i in 1:3], 2)
-        setnames!(DT, ["D$i" for i in 1:3], 1)
-        setnames!(DT, ["T$i" for i in 1:2], 2)
-
-        @testset "Graph construction" begin
-            A, B = prepare(DT, DF, C)
-            @test all(names(A, 1) .== names(A, 2))
-            @test all(names(B, 1) .== names(B, 2))
-            @test all(names(A, 1) .== ["D1", "D2", "D3", "fD2", "fD3", "T1", "T2"])
-            @test all(names(B, 1) .== ["D1", "D2", "D3", "fD2", "fD3", "T1", "T2"])
-        end
-
-        @testset "Graph construction errors" begin
-            setnames!(DF, ["D$i" for i in 1:3], 2)
-            @test_throws AssertionError("Features and drugs have the same names!") prepare(DT, DF, C)
-        end
-    end
-
+    # TODO: Add unittests
+    @testset "split" begin @test skip = true end
     @testset "cutoff" begin
         # Prepare test
         x = 0.8
@@ -72,12 +48,71 @@ end
             @test cutoff(z, γ, true) ≈ zeros(Float64, 11)
         end
     end
+
+    # TODO: Add unittests
+    @testset "cutoff!" begin @test skip = true end
+
+    # TODO: Add unittests
+    @testset "featurize" begin @test skip = true end
+
+    @testset "prepare" begin
+        # Prepare test
+        DF = NamedArray([1 0 1; 1 1 0; 0 1 1])
+        DT = NamedArray([0 1; 1 1; 1 0])
+        C = ["D1"]
+        setnames!(DF, ["D$i" for i in 1:3], 1)
+        setnames!(DF, ["fD$i" for i in 1:3], 2)
+        setnames!(DT, ["D$i" for i in 1:3], 1)
+        setnames!(DT, ["T$i" for i in 1:2], 2)
+
+        @testset "Graph construction" begin
+            A, B = prepare(DT, DF, C)
+            @test all(names(A, 1) .== names(A, 2))
+            @test all(names(B, 1) .== names(B, 2))
+            @test all(names(A, 1) .== ["D1", "D2", "D3", "fD2", "fD3", "T1", "T2"])
+            @test all(names(B, 1) .== ["D1", "D2", "D3", "fD2", "fD3", "T1", "T2"])
+        end
+
+        @testset "Graph construction errors" begin
+            setnames!(DF, ["D$i" for i in 1:3], 2)
+            @test_throws AssertionError("Features and drugs have the same names!") prepare(DT, DF, C)
+        end
+    end
+
+    # TODO: Add unittests
+    @testset "spread" begin @test skip = true end
+
+    # TODO: Add unittests
+    @testset "predict" begin @test skip = true end
+
+    # TODO: Add unittests
+    @testset "clean!" begin @test skip = true end
+
+    # TODO: Add unittests
+    @testset "save" begin @test skip = true end
+
 end
 
-# TODO: Add performance metrics unit tests
 @testset "Performance evaluation" begin
-    @testset "Overall performance metrics" begin end
-    @testset "Early recognition metrics" begin end
+    @testset "Overall performance metrics" begin
+        # TODO: Add unittests
+        @testset "AuPRC" begin @test skip = true end
+
+        # TODO: Add unittests
+        @testset "AuROC" begin @test skip = true end
+    end
+
+    @testset "Early recognition metrics" begin 
+        # TODO: Add unittests
+        @testset "BEDROC" begin @test skip = true end
+
+        # TODO: Add unittests
+        @testset "recallatL" begin @test skip = true end
+
+        # TODO: Add unittests
+        @testset "precisionatL" begin @test skip = true end
+    end
+
     @testset "Binary prediction metrics" begin
         @testset "From confusion matrix" begin
             tn, fp, fn, tp = [3, 2, 2, 3]
@@ -90,7 +125,7 @@ end
             @test SimSpread.precision(tn, fp, fn, tp) ≈ 0.6
         end
 
-        @testset "From y and ŷ vectors" begin
+        @testset "From ROCNums" begin
             y, yhat = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0], [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
 
             @test SimSpread.f1score(roc(y, yhat)) ≈ 0.6
@@ -101,6 +136,18 @@ end
             @test SimSpread.precision(roc(y, yhat)) ≈ 0.6
         end
 
+        # TODO: Implement function
+        @testset "From y and yhat vectors" begin
+            y, yhat = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0], [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
+
+            @test SimSpread.f1score(y, yhat) ≈ 0.6 skip = true
+            @test SimSpread.mcc(y, yhat) ≈ 0.2 skip = true
+            @test SimSpread.accuracy(y, yhat) ≈ 0.6 skip = true
+            @test SimSpread.balancedaccuracy(y, yhat) ≈ 0.6 skip = true
+            @test SimSpread.recall(y, yhat) ≈ 0.6 skip = true
+            @test SimSpread.precision(y, yhat) ≈ 0.6 skip = true
+        end
+
         @testset "MCC for undefined cases" begin
             yhat, y = [1, 1, 0, 1, 0, 0, 0, 1, 1, 0], [1, 1, 1, 0, 0, 0, 0, 0, 0, 0]
 
@@ -109,5 +156,16 @@ end
             @test SimSpread.mcc(roc(ones(Int, 10), yhat)) - SimSpread.mcc(5, 5) < 10^-5
             @test SimSpread.mcc(roc(zeros(Int, 10), yhat)) - SimSpread.mcc(5, 5) < 10^-5
         end
+    end
+
+    @testset "Miscellaneous metrics" begin 
+        # TODO: Add unittests
+        @testset "meanperformance" begin @test skip = true end
+
+        # TODO: Add unittests
+        @testset "meanstdperformance" begin @test skip = true end
+
+        # TODO: Add unittests
+        @testset "maxperformanc" begin @test skip = true end
     end
 end
