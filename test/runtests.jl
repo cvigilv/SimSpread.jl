@@ -43,7 +43,7 @@ end
         # Prepare test
         x = 0.8
         y = hcat(collect(0.0:0.1:1.0))
-        z = [0.1 0.5;0.5 1.0]
+        z = [0.1 0.5; 0.5 1.0]
 
         @testset "Cutoff = mean(values)" begin
             α = 0.5
@@ -51,18 +51,18 @@ end
             @test cutoff(x, α, true) ≈ 0.8
             @test cutoff(y, α, false) ≈ [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
             @test cutoff(y, α, true) ≈ [0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-            @test cutoff(z, α, false) ≈ [0.0 1.0;1.0 1.0]
-            @test cutoff(z, α, true) ≈ [0.0 0.5;0.5 1.0]
+            @test cutoff(z, α, false) ≈ [0.0 1.0; 1.0 1.0]
+            @test cutoff(z, α, true) ≈ [0.0 0.5; 0.5 1.0]
         end
 
         @testset "Cutoff < min(values)" begin
             β = -0.01
             @test cutoff(x, β, false) ≈ 1.0
-            @test cutoff(x, β, true) ≈ 0.8
+            @test cutoff(x, β, true) ≈ x
             @test cutoff(y, β, false) ≈ ones(Float64, 11)
             @test cutoff(y, β, true) ≈ y
             @test cutoff(z, β, false) ≈ ones(Float64, 2, 2)
-            @test cutoff(z, β, true) ≈ [0.1 0.5;0.5 1.0]
+            @test cutoff(z, β, true) ≈ z
         end
 
         @testset "Cutoff > max(values)" begin
