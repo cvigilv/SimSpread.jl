@@ -105,9 +105,11 @@ end
         end
     end
 
-    # TODO: Add unittests
     @testset "spread" begin
-        @test skip = true
+        M = [1.0 0.0 0.0; 1.0 1.0 0.0; 1.0 1.0 1.0]
+        W = [1.0 0.0 0.0; 0.5 0.5 0.0; 0.33333 0.33333 0.33333]
+
+        @test spread(M) ≈ W rtol=10^-5
     end
 
     # TODO: Add unittests
