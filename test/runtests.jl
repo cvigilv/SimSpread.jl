@@ -203,14 +203,22 @@ end
             @test skip = true
         end
 
-        # TODO: Add unittests
         @testset "recallatL" begin
-            @test skip = true
+            grouping = ones(10)
+            yhat = vec(collect(1:1:10))
+            y = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+
+            @test recallatL(y, yhat, grouping, 5) ≈ 3/3
+            @test recallatL(y, yhat, grouping, 1) ≈ 1/3
         end
 
-        # TODO: Add unittests
         @testset "precisionatL" begin
-            @test skip = true
+            grouping = ones(10)
+            yhat = vec(collect(1:1:10))
+            y = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+
+            @test precisionatL(y, yhat, grouping, 5) ≈ 3/5
+            @test precisionatL(y, yhat, grouping, 1) ≈ 1/1
         end
     end
 
