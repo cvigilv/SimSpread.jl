@@ -5,13 +5,27 @@ using MLBase
 
 # TODO: Add unittests
 @testset "General utilities" begin
-    @testset "read_namedmatrix" begin @test skip = true end
-    @testset "k" begin @test skip = true end
+    @testset "read_namedmatrix" begin
+        @test skip = true
+    end
+    @testset "k" begin
+        @test skip = true
+    end
 end
 
 @testset "SimSpread Core" begin
     # TODO: Add unittests
-    @testset "split" begin @test skip = true end
+    @testset "split" begin
+        X = NamedArray(zeros(10,5), (["s$i" for i in 1:10], ["t$i" for i in 1:5]))
+        @test SimSpread.split(X, 5) == [
+            ["s4", "s3"],
+            ["s9", "s10"],
+            ["s5", "s6"],
+            ["s1", "s2"],
+            ["s7", "s8"],
+        ]
+
+    end
     @testset "cutoff" begin
         # Prepare test
         x = 0.8
@@ -50,10 +64,9 @@ end
     end
 
     # TODO: Add unittests
-    @testset "cutoff!" begin @test skip = true end
-
-    # TODO: Add unittests
-    @testset "featurize" begin @test skip = true end
+    @testset "featurize" begin
+        @test skip = true
+    end
 
     @testset "prepare" begin
         # Prepare test
@@ -80,37 +93,55 @@ end
     end
 
     # TODO: Add unittests
-    @testset "spread" begin @test skip = true end
+    @testset "spread" begin
+        @test skip = true
+    end
 
     # TODO: Add unittests
-    @testset "predict" begin @test skip = true end
+    @testset "predict" begin
+        @test skip = true
+    end
 
     # TODO: Add unittests
-    @testset "clean!" begin @test skip = true end
+    @testset "clean!" begin
+        @test skip = true
+    end
 
     # TODO: Add unittests
-    @testset "save" begin @test skip = true end
+    @testset "save" begin
+        @test skip = true
+    end
 
 end
 
 @testset "Performance evaluation" begin
     @testset "Overall performance metrics" begin
         # TODO: Add unittests
-        @testset "AuPRC" begin @test skip = true end
+        @testset "AuPRC" begin
+            @test skip = true
+        end
 
         # TODO: Add unittests
-        @testset "AuROC" begin @test skip = true end
+        @testset "AuROC" begin
+            @test skip = true
+        end
     end
 
-    @testset "Early recognition metrics" begin 
+    @testset "Early recognition metrics" begin
         # TODO: Add unittests
-        @testset "BEDROC" begin @test skip = true end
+        @testset "BEDROC" begin
+            @test skip = true
+        end
 
         # TODO: Add unittests
-        @testset "recallatL" begin @test skip = true end
+        @testset "recallatL" begin
+            @test skip = true
+        end
 
         # TODO: Add unittests
-        @testset "precisionatL" begin @test skip = true end
+        @testset "precisionatL" begin
+            @test skip = true
+        end
     end
 
     @testset "Binary prediction metrics" begin
@@ -158,14 +189,20 @@ end
         end
     end
 
-    @testset "Miscellaneous metrics" begin 
+    @testset "Miscellaneous metrics" begin
         # TODO: Add unittests
-        @testset "meanperformance" begin @test skip = true end
+        @testset "meanperformance" begin
+            @test skip = true
+        end
 
         # TODO: Add unittests
-        @testset "meanstdperformance" begin @test skip = true end
+        @testset "meanstdperformance" begin
+            @test skip = true
+        end
 
         # TODO: Add unittests
-        @testset "maxperformanc" begin @test skip = true end
+        @testset "maxperformanc" begin
+            @test skip = true
+        end
     end
 end
