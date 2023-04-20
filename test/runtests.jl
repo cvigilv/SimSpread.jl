@@ -26,18 +26,12 @@ using MLBase
     end
 end
 
-@testset "SimSpread Core" begin
-    # TODO: Add unittests
+@testset verbose = true "SimSpread Core" begin
     @testset "split" begin
-        X = NamedArray(zeros(10,5), (["s$i" for i in 1:10], ["t$i" for i in 1:5]))
-        @test SimSpread.split(X, 5) == [
-            ["s4", "s3"],
-            ["s9", "s10"],
-            ["s5", "s6"],
-            ["s1", "s2"],
-            ["s7", "s8"],
-        ]
+        X = [["s4", "s3"], ["s9", "s10"], ["s5", "s6"], ["s1", "s2"], ["s7", "s8"]]
+        X̂ = NamedArray(zeros(10, 5), (["s$i" for i in 1:10], ["t$i" for i in 1:5]))
 
+        @test X == SimSpread.split(X̂, 5; seed=1)
     end
     @testset "cutoff" begin
         # Prepare test
