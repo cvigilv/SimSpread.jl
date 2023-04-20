@@ -184,7 +184,7 @@ end
 
 end
 
-@testset "Performance evaluation" begin
+@testset "Performance evaluation" verbose = true begin
     @testset "Overall performance metrics" begin
         # TODO: Add unittests
         @testset "AuPRC" begin
