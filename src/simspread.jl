@@ -18,7 +18,7 @@ function spread(F₀::AbstractMatrix{Float64})
     replace!(W, Inf => 0.0)
     replace!(W, NaN => 0.0)
 
-    return W
+        return W
 end
 
 spread(F₀::AbstractMatrix{Bool}) = spread(AbstractMatrix{Float64}(F₀))
@@ -49,21 +49,6 @@ function cutoff(x::T, α::T, weighted::Bool=false) where {T<:AbstractFloat}
 end
 
 """
-    cutoff!(x::T, α::T, weighted::Bool=false) where {T<:AbstractFloat}
-
-Transform `x` based in SimSpread's similarity cutoff function, overwriting `x`.
-
-# Arguments
-- `x::T` : Value to transform
-- `α::T` : Similarity matrix
-- `weighted::Bool` : Apply weighting function to outcome (default = false)
-"""
-function cutoff!(x::T, α::T, weighted::Bool=false) where {T<:AbstractFloat}
-    weight = weighted ? x : 1.0
-    x = x ≥ α ? weight : 0.0
-end
-
-"""
     cutoff(x::AbstractMatrix{T}, α::T, weighted::Bool=false) where {T<:AbstractFloat}
 
 Transform `M` based in SimSpread's similarity cutoff function.
@@ -78,20 +63,6 @@ function cutoff(M::AbstractVecOrMat{T}, α::T, weighted::Bool=false) where {T<:A
     M′ = cutoff.(M′, α, weighted)
 
     return M′
-end
-
-"""
-    cutoff!(M::AbstractVecOrMat{T}, α::T, weighted::Bool=false) where {T<:AbstractFloat}
-
-Transform `M` based in SimSpread's similarity cutoff function, overwriting `M`.
-
-# Arguments
-- `M::T` : Matrix or Vector to transform
-- `α::T` : Similarity threshold
-- `weighted::Bool` : Apply weighting function to outcome (default = false)
-"""
-function cutoff!(M::AbstractVecOrMat{T}, α::T, weighted::Bool=false) where {T<:AbstractFloat}
-    cutoff!.(M, α, weighted)
 end
 
 """

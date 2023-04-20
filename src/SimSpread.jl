@@ -24,7 +24,6 @@ export writedlm,
     # SimSpread
     spread,
     cutoff,
-    cutoff!,
     featurize,
     split,
     prepare,
