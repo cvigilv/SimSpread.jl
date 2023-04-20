@@ -69,9 +69,14 @@ end
         end
     end
 
-    # TODO: Add unittests
     @testset "featurize" begin
-        @test skip = true
+        M₀ = NamedArray([0.1 0.5; 0.5 1.0], (["s1", "s2"], ["s1", "s2"]))
+        M₁ = NamedArray([0.0 1.0; 1.0 1.0], (["s1", "s2"], ["fs1", "fs2"]))
+        M₂ = NamedArray([0.0 0.5; 0.5 1.0], (["s1", "s2"], ["fs1", "fs2"]))
+        α = 0.5
+
+        @test featurize(M₀, α, false) == M₁
+        @test featurize(M₀, α, true) == M₂
     end
 
     @testset "prepare" begin
