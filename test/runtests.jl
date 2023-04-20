@@ -4,12 +4,25 @@ using NamedArrays
 using MLBase
 
 # TODO: Add unittests
-@testset "General utilities" begin
+@testset "General utilities" verbose = true begin
     @testset "read_namedmatrix" begin
-        @test skip = true
+        W = NamedArray(zeros(2, 3), (["s1", "s2"], ["t1", "t2", "t3"]))
+        X = NamedArray(zeros(2, 3), (["s1", "s2"], ["C#1", "C#2", "C#3"]))
+        Y = NamedArray(zeros(2, 3), (["R#1", "R#2"], ["t1", "t2", "t3"]))
+        Z = NamedArray(zeros(2, 3), (["R#1", "R#2"], ["C#1", "C#2", "C#3"]))
+
+        @test SimSpread.read_namedmatrix("data/mat1") == X
+        @test SimSpread.read_namedmatrix("data/mat2"; cols = false) == Y
+        @test SimSpread.read_namedmatrix("data/mat3"; rows = false) == Z
+        @test SimSpread.read_namedmatrix("data/mat4"; rows = false, cols = false) == Z
     end
+
     @testset "k" begin
-        @test skip = true
+        M = [0 0 0; 0 0 1; 0 1 1; 1 1 1]
+
+        @test k(1, M) ≈ 0
+        @test k(M[1, :]) ≈ 0
+        @test k(M) ≈ [0, 1, 2, 3]
     end
 end
 
