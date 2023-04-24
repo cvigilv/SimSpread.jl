@@ -31,9 +31,9 @@ using Pkg
 Pkg.add("https://github.com/cvigilv/SimSpread.jl.git")
 ~~~
 
-For the newest version (developmental version, may break):
+For the newest version (development version, may break):
 ~~~ julia
-]add https://github.com/cvigilv/LeafletJS.jl.git#develop
+]add https://github.com/cvigilv/SimSpread.jl.git#develop
 ~~~
 or
 ~~~ julia
