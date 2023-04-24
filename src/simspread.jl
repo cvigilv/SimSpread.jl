@@ -216,8 +216,8 @@ function construct(ys::T, Xs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
     ytrain, ytest = ys
     Xtrain, Xtest = Xs
 
-    @assert size(ytrain, 2) == size(ytest, 2) "Different number of targets!"
-    @assert size(Xtrain, 2) == size(Xtest, 2) "Different number of features!"
+    @assert size(ytrain, 2) == size(ytest, 2) "Number of targets between test and training sets doens't match"
+    @assert size(Xtrain, 2) == size(Xtest, 2) "Number of features between test and training sets doens't match"
 
     # Get names from matrices
     features = names(Xtrain, 2)
@@ -289,12 +289,45 @@ function construct(ytrain::T, ytest::T, Xtrain::T, Xtest::T) where {T<:NamedMatr
     construct((ytrain, ytest), (Xtrain, Xtest))
 end
 
-function prepare(ys::T, Xs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
-    @error "`prepare` is deprecated. Change code to `construct`."
-end
+"""
+    construct(y::NamedMatrix, X::NamedMatrix)
 
-function construct(y::NamedMatrix, X::NamedMatrix, queries::AbstractVector)
-    @error "`prepare` is deprecated. Change code to `construct`."
+Construct the feature-source-target network for network-based inference
+prediction and return adjacency matrix.
+
+# Arguments
+- `y::NamedMatrix` : Source-target bipartite graph adjacency matrix
+- `X::NamedMatrix` : Source-feature bipartite graph adjacency matrix
+"""
+function construct(y::NamedMatrix, X::NamedMatrix)
+    # Get names from matrices
+    features = names(X, 2)
+    sources = names(y, 1)
+    targets = names(y, 2)
+
+    @assert all(sort(features) .!= sort(sources)) "Source and feature nodes have the same names"
+
+    # Get dimensions of network
+    Nsources = length(sources)
+    Ntargets = length(targets)
+    Nfeatures = length(features)
+
+    # Construct trilayered graph adjacency matrix
+    Mss = zeros(Nsources, Nsources)
+    Msf = X.array
+    Mst = y.array
+    Mfs = Msf'
+    Mff = zeros(Nfeatures, Nfeatures)
+    Mft = zeros(Nfeatures, Ntargets)
+    Mts = Mst'
+    Mtf = Mft'
+    Mtt = zeros(Ntargets, Ntargets)
+
+    A = Matrix([Mss Msf Mst; Mfs Mff Mft; Mts Mtf Mtt])
+
+    index_names = vcat(sources, features, targets)
+
+    return NamedArray(A, (index_names, index_names))
 end
 
 """
