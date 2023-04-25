@@ -347,16 +347,14 @@ Flag errors from cross-validation splitting in place.
 - `DT::NamedArray`: Ground-truth drug-target interactions adjacency matrix
 """
 function clean!(R::NamedArray, A::NamedArray, DT::NamedArray)
-    # Clean predictions adjacancy matrix R from disconnected targets
-    disconnected = 0
-    for (tᵢ, k) in zip(names(DT, 2), k(A[names(DT, 1), names(DT, 2)]))
-        if k == 0
-            disconnected += 1
+    targets = names(DT, 2)
+
+    for (tᵢ, degree) in zip(targets, k(A[targets, :]))
+        if degree == 0
             R[:, tᵢ] .= -99
             R[tᵢ, :] .= -99
         end
     end
-    # @warn "$disconnected targets got disconnected, flagging predictions with '-99'"
 end
 
 """
