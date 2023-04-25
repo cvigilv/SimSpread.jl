@@ -1,3 +1,4 @@
+using Base: Constructor
 using Test
 using SimSpread
 using NamedArrays
@@ -79,27 +80,33 @@ end
         @test featurize(M₀, α, true) == M₂
     end
 
-    @testset "prepare" begin
+    @testset "construct" begin
         # Prepare test
-        DF = NamedArray([1 0 1; 1 1 0; 0 1 1])
-        DT = NamedArray([0 1; 1 1; 1 0])
-        C = ["D1"]
-        setnames!(DF, ["D$i" for i in 1:3], 1)
-        setnames!(DF, ["fD$i" for i in 1:3], 2)
-        setnames!(DT, ["D$i" for i in 1:3], 1)
-        setnames!(DT, ["T$i" for i in 1:2], 2)
+        X = NamedArray([1 0 1; 1 1 0; 0 1 1])
+        y = NamedArray([0 1; 1 1; 1 0])
+        queries = ["s1"]
+        setnames!(X, ["s$i" for i in 1:3], 1)
+        setnames!(X, ["fs$i" for i in 1:3], 2)
+        setnames!(y, ["s$i" for i in 1:3], 1)
+        setnames!(y, ["t$i" for i in 1:2], 2)
 
         @testset "Graph construction" begin
-            A, B = prepare(DT, DF, C)
+            A, B = construct(y, X, queries)
             @test all(names(A, 1) .== names(A, 2))
             @test all(names(B, 1) .== names(B, 2))
-            @test all(names(A, 1) .== ["D1", "D2", "D3", "fD2", "fD3", "T1", "T2"])
-            @test all(names(B, 1) .== ["D1", "D2", "D3", "fD2", "fD3", "T1", "T2"])
+            @test all(names(A, 1) .== ["s1", "s2", "s3", "fs2", "fs3", "t1", "t2"])
+            @test all(names(B, 1) .== ["s1", "s2", "s3", "fs2", "fs3", "t1", "t2"])
         end
 
-        @testset "Graph construction errors" begin
-            setnames!(DF, ["D$i" for i in 1:3], 2)
-            @test_throws AssertionError("Features and drugs have the same names!") prepare(DT, DF, C)
+        @testset "Graph construction - Assertion errors" begin
+            setnames!(X, ["s$i" for i in 1:3], 2)
+            @test_throws AssertionError("Source and Features nodes have the same names!") construct(y, X, queries)
+
+            X₂ = NamedArray([1 0 1; 1 1 0])
+            setnames!(X₂, ["s$i" for i in 1:2], 1)
+            setnames!(X₂, ["fs$i" for i in 1:3], 2)
+
+            @test_throws AssertionError("Labels and features have different number of source nodes") construct(y, X₂, queries)
         end
     end
 

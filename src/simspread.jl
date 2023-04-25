@@ -146,14 +146,14 @@ prediction and return adjacency matrix.
 This implementation is intended for k-fold or leave-one-out cross-validation.
 """
 function construct(y::NamedMatrix, X::NamedMatrix, queries::AbstractVector)
-    @assert size(y, 1) == size(X, 1) "Different number of compounds!"
+    @assert size(y, 1) == size(X, 1) "Labels and features have different number of source nodes"
 
     # Get names from matrices
     features = [f for f in names(X, 2) if lstrip(f, 'f') ∉ queries]
     sources = [d for d in names(X, 1) if d ∉ queries]
     targets = names(y, 2)
 
-    @assert all(sort(features) .!= sort(sources)) "Features and drugs have the same names!"
+    @assert all(sort(features) .!= sort(sources)) "Source and Features nodes have the same names!"
 
     # Get dimensions of network
     Nqueries = length(queries)
