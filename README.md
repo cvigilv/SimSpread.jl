@@ -8,14 +8,18 @@ matures into its final state.*
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://cvigilv.github.io/SimSpread.jl/dev/)
 [![Build Status](https://github.com/cvigilv/SimSpread.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/cvigilv/SimSpread.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-<img src="/docs/src/assets/SimSpread_logo.png" align="right" style="padding-left:10px;" width="300"/>
+<img src="/docs/src/assets/SimSpread_logo.png" align="right" style="padding-left:10px;" width="250"/>
 
 ## What is SimSpread.jl?
 
-SimSpread.jl is a Julia implementation of the SimSpread formalism and its necessary functions
-for link prediction. SimSpread is a novel approach for predicting interactions between source
-and targets nodes using a similarity measure vector between source nodes as a meta-description
-in combination with the network-based inference formalism for link prediction.
+SimSpread.jl is a Julia implementation of the SimSpread formalism for link prediction. SimSpread
+is a novel approach for predicting interactions between two distinct set of nodes, query and
+target nodes, using a similarity measure vector between query nodes as a meta-description in
+combination with the network-based inference for link prediction.
+
+Originally developed for the prediction of pharmacological targets for a chemical compound,
+this packages generalizes the method to enable the prediction of links between any pair of nodes,
+e.g., user-object, reader-book, buyer-product, etc.
 
 ## Installation
 
@@ -31,9 +35,9 @@ using Pkg
 Pkg.add("https://github.com/cvigilv/SimSpread.jl.git")
 ~~~
 
-For the newest version (developmental version, may break):
+For the newest version (development version, may break):
 ~~~ julia
-]add https://github.com/cvigilv/LeafletJS.jl.git#develop
+]add https://github.com/cvigilv/SimSpread.jl.git#develop
 ~~~
 or
 ~~~ julia
