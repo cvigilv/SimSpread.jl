@@ -1,34 +1,33 @@
 """
-    spread(F₀::AbstractMatrix{Float64})
+    Base.split(DT::NamedArray, k::Int64, rng::Int64)
+
+Split all possible `D` into `k` groups for cross-validation.
+
+# Long description
+Split drugs `D` into `k` groups, extract their edges and append to cross-validation group.
 
 # Arguments
-- `F₀::AbstractMatrix{Float64}`: Trilayered SimSpread network adjacency matrix
+- `DT::AbstractMatrix`: Drug-Target rectangular adjacency matrix.
+- `k::Int64`: Number of groups to use in data splitting.
+- `rng::Int64`: Seed used for data splitting.
 
-# References
-1. Wu, et al (2016). SDTNBI: an integrated network and chemoinformatics tool for
-   systematic prediction of drug–target interactions and drug repositioning. Briefings in
-   Bioinformatics, bbw012. https://doi.org/10.1093/bib/bbw012
-2. Vigil-Vásquez & Schüller (2022). De Novo Prediction of Drug Targets and Candidates by
-   Chemical Similarity-Guided Network-Based Inference. International Journal of Molecular
-   Sciences, 23(17), 9666. https://doi.org/10.3390/ijms23179666
 """
-function spread(F₀::AbstractMatrix{Float64})
-    # Transfer matrix
-    W = F₀ ./ k(F₀)
-    replace!(W, Inf => 0.0)
-    replace!(W, NaN => 0.0)
+function Base.split(G::NamedArray, ngroups::Int64; seed::Int64=1)
+    # Get array of drugs in adjacency matrix
+    D = names(G, 1)
 
-        return W
+    # Assign fold to edges of graph
+    shuffle!(MersenneTwister(seed), D)
+    groups = [[] for _ in 1:ngroups]
+
+    for (i, dᵢ) in enumerate(D)
+        foldᵢ = mod(i, ngroups) + 1
+        push!(groups[foldᵢ], dᵢ)
+    end
+
+    return groups
 end
 
-spread(F₀::AbstractMatrix{Bool}) = spread(AbstractMatrix{Float64}(F₀))
-
-function spread(namedF₀::NamedMatrix)
-    namedW = copy(namedF₀)
-    namedW.array = spread(Matrix{Float64}(namedF₀.array))
-
-    return namedW
-end
 
 """
     cutoff(x::T, α::T, weighted::Bool=false) where {T<:AbstractFloat}
@@ -63,6 +62,26 @@ function cutoff(M::AbstractVecOrMat{T}, α::T, weighted::Bool=false) where {T<:A
     M′ = cutoff.(M′, α, weighted)
 
     return M′
+end
+
+"""
+    featurize(M::NamedArray, α::Float64, β::Float64, weighted::Bool)
+
+Convert continuous feature into binary feature based in 2 cutoffs: (i) α for strong-ties and
+(ii) β for weak-ties. Weighted version of function weights binary features with it's real
+value.
+
+# Arguments
+- `M::AbtractMatrix`: Continuous feature matrix
+- `α::AbstractFloat`: Strong-ties cutoff
+- `weighted::Bool`: Flag for feature weighting using real value
+"""
+function featurize(M::NamedArray, α::AbstractFloat, weighted::Bool)
+    # Filter matrix
+    Mf = copy(M)
+    Mf.array = cutoff.(M.array, α, weighted)
+    setnames!(Mf, ["f$f" for f in names(Mf, 2)], 2)
+    return Mf
 end
 
 """
@@ -198,68 +217,35 @@ function prepare(dts::T, dfs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
 end
 
 """
-    split(DT::NamedArray, k::Int64, rng::Int64)
-
-Split all possible `D` into `k` groups for cross-validation.
-
-# Long description
-Split drugs `D` into `k` groups, extract their edges and append to cross-validation group.
+    spread(F₀::AbstractMatrix{Float64})
 
 # Arguments
-- `DT::AbstractMatrix`: Drug-Target rectangular adjacency matrix.
-- `k::Int64`: Number of groups to use in data splitting.
-- `rng::Int64`: Seed used for data splitting.
+- `F₀::AbstractMatrix{Float64}`: Trilayered SimSpread network adjacency matrix
 
+# References
+1. Wu, et al (2016). SDTNBI: an integrated network and chemoinformatics tool for
+   systematic prediction of drug–target interactions and drug repositioning. Briefings in
+   Bioinformatics, bbw012. https://doi.org/10.1093/bib/bbw012
+2. Vigil-Vásquez & Schüller (2022). De Novo Prediction of Drug Targets and Candidates by
+   Chemical Similarity-Guided Network-Based Inference. International Journal of Molecular
+   Sciences, 23(17), 9666. https://doi.org/10.3390/ijms23179666
 """
-function Base.split(G::NamedArray, ngroups::Int64; seed::Int64=1)
-    # Get array of drugs in adjacency matrix
-    D = names(G, 1)
+function spread(F₀::AbstractMatrix{Float64})
+    # Transfer matrix
+    W = F₀ ./ k(F₀)
+    replace!(W, Inf => 0.0)
+    replace!(W, NaN => 0.0)
 
-    # Assign fold to edges of graph
-    shuffle!(MersenneTwister(seed), D)
-    groups = [[] for _ in 1:ngroups]
-
-    for (i, dᵢ) in enumerate(D)
-        foldᵢ = mod(i, ngroups) + 1
-        push!(groups[foldᵢ], dᵢ)
-    end
-
-    return groups
+        return W
 end
 
+spread(F₀::AbstractMatrix{Bool}) = spread(AbstractMatrix{Float64}(F₀))
 
-"""
-    clamp(val::Number, vmin::Number, vmax::Number)
+function spread(namedF₀::NamedMatrix)
+    namedW = copy(namedF₀)
+    namedW.array = spread(Matrix{Float64}(namedF₀.array))
 
-Restrict a value to a given range.
-
-# Arguments
-- `val::Number` : Value to clamp
-- `vmin::Number` : Value floor
-- `vmax::Number` : Value roof
-"""
-function clamp(val::Number, vmin::Number, vmax::Number)
-    val < vmin ? vmin : val > vmax ? vmax : val
-end
-
-"""
-    featurize(M::NamedArray, α::Float64, β::Float64, weighted::Bool)
-
-Convert continuous feature into binary feature based in 2 cutoffs: (i) α for strong-ties and
-(ii) β for weak-ties. Weighted version of function weights binary features with it's real
-value.
-
-# Arguments
-- `M::AbtractMatrix`: Continuous feature matrix
-- `α::AbstractFloat`: Strong-ties cutoff
-- `weighted::Bool`: Flag for feature weighting using real value
-"""
-function featurize(M::NamedArray, α::AbstractFloat, weighted::Bool)
-    # Filter matrix
-    Mf = copy(M)
-    Mf.array = cutoff.(M.array, α, weighted)
-    setnames!(Mf, ["f$f" for f in names(Mf, 2)], 2)
-    return Mf
+    return namedW
 end
 
 """
