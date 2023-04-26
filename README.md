@@ -26,7 +26,7 @@ nodes, e.g., user-object, reader-book, buyer-product, etc.
 In the Julia REPL, enter the Julia package manager using the right backet character (`]`) and
 insert the following:
 ~~~ julia
-add https://github.com/cvigilv/SimSpread.jl.git rev = "develop"
+add https://github.com/cvigilv/SimSpread.jl.git
 ~~~
 Press the backspace key to return to the Julia prompt.
 
@@ -39,12 +39,8 @@ Pkg.add("https://github.com/cvigilv/SimSpread.jl.git")
 
 For the newest version (development version, may break):
 ~~~ julia
-]add https://github.com/cvigilv/SimSpread.jl.git#develop
-~~~
-or
-~~~ julia
 using Pkg
-Pkg.add("https://github.com/cvigilv/SimSpread.jl.git#develop")
+Pkg.add("https://github.com/cvigilv/SimSpread.jl.git", rev = "develop")
 ~~~
 
 ## Examples
