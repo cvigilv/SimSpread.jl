@@ -414,20 +414,47 @@ function precisionatL(y, yhat, grouping, L::Integer=20)
 end
 
 """
-    maxperf(confusion::ROCNums, metric::Function)
+    maxperformance(confusion::ROCNums, metric::Function)
 
 Get maximum performance of a given metric over a set of confusion matrices.
 
+# Arguments
+- `confusion::ROCNums`: Confusion matrix object from MLBase
+- `̂metric::Function`: Performance metric function to use in evaluation.
 """
-function maxperformance(confusion, metric::Function)
+function maxperformance(confusion::ROCNums, metric::Function)
     performance = metric.(confusion)
     return maximum(performance)
+end
+
+"""
+    maxperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+
+Get maximum performance of a given metric over a pair of label-prediction vectors.
+
+# Arguments
+- `y::AbstractVector{Bool}`: Binary class labels. 1 for positive class, 0 otherwise.
+- `̂yhat::AbstractVector{Float64}`: Prediction score.
+- `̂metric::Function`: Performance metric function to use in evaluation.
+"""
+function maxperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+    @assert length(y) == length(yhat) "The number of scores must be equal to the number of labels"
+
+    # Calculate confusion matrices for each threshold
+    thresholds = sort(unique(yhat))
+    confusion = roc(y, yhat, thresholds)
+
+    return maxperformance(confusion, metric)
 end
 
 """
     meanperf(confusion::ROCNums, metric::Function)
 
 Get mean performance of a given metric over a set of confusion matrices.
+
+# Arguments
+- `confusion::ROCNums`: Confusion matrix object from MLBase
+- `̂metric::Function`: Performance metric function to use in evaluation.
 """
 function meanperformance(confusion::ROCNums, metric::Function)
     performance = metric.(confusion)
@@ -435,9 +462,33 @@ function meanperformance(confusion::ROCNums, metric::Function)
 end
 
 """
+    meanperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+
+Get mean performance of a given metric over a pair of label-prediction vectors.
+
+# Arguments
+- `y::AbstractVector`: Binary class labels. 1 for positive class, 0 otherwise.
+- `̂yhat::AbstractVector`: Prediction score.
+- `̂metric::Function`: Performance metric function to use in evaluation.
+"""
+function meanperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+    @assert length(y) == length(yhat) "The number of scores must be equal to the number of labels"
+
+    # Calculate confusion matrices for each threshold
+    thresholds = sort(unique(yhat))
+    confusion = roc(y, yhat, thresholds)
+
+    return meanperformance(confusion, metric)
+end
+
+"""
     meanstdperf(confusion::ROCNums, metric::Function)
 
 Get mean and standard deviation performance of a given metric over a set of confusion matrices.
+
+# Arguments
+- `confusion::ROCNums`: Confusion matrix object from MLBase
+- `̂metric::Function`: Performance metric function to use in evaluation.
 """
 function meanstdperformance(confusion::ROCNums, metric::Function)
     performance = metric.(confusion)
@@ -445,15 +496,23 @@ function meanstdperformance(confusion::ROCNums, metric::Function)
 end
 
 """
-    count_zeros(yhat::AbstractVector)
-Counts the number of empty predictions (score equal to 0) in a array of scores
+    meanstdperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+
+Get mean and standard deviation performance of a given metric over a pair of label-prediction
+vectors.
+
+# Arguments
+- `y::AbstractVector`: Binary class labels. 1 for positive class, 0 otherwise.
+- `̂yhat::AbstractVector`: Prediction scores.
+- `̂metric::Function`: Performance metric function to use in evaluation.
 """
-function count_zeros(yhat::AbstractVector)
-    count = 0
-    for x in yhat
-        if x == 0
-            count += 1
-        end
-    end
-    return count
+function meanstdperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+    @assert length(y) == length(yhat) "The number of scores must be equal to the number of labels"
+
+    # Calculate confusion matrices for each threshold
+    thresholds = sort(unique(yhat))
+    confusion = roc(y, yhat, thresholds)
+
+    return meanstdperformance(confusion, metric)
+end
 end
