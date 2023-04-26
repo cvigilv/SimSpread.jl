@@ -88,21 +88,6 @@ function AuPRC(y::AbstractVector{Bool}, yhat::AbstractVector)
     return auc
 end
 
-# def eP(df, L, col_score="score", col_pred="tp"):
-#     P_L = precision_at_L(df, L, col_score, col_pred)
-#     D = sum(df[col_pred].values)
-#     M = len(df["ligand"].unique())
-#     N = len(df["target"].unique())
-#
-#     return P_L * M * N / D
-#
-#
-# def eR(df, L, col_score="score", col_pred="tp"):
-#     R_L = recall_at_L(df, L, col_score, col_pred)
-#     N = len(df["target"].unique())
-#
-#     return R_L * N / L
-
 """
     f1score(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
 
@@ -363,7 +348,7 @@ Get precision@L as proposed by Wu, et al (2017).
 - `grouping::AbstractVector`: Group labels.
 - `L::Integer`: Length to consider to calculate metrics (default = 20).
 """
-function precisionatL(y, yhat, grouping, L)
+function precisionatL(y, yhat, grouping, L::Integer=20)
     @assert L > 0 "Please use a list length greater than 0 (L > 0)"
     @assert length(y) == length(yhat) "Number of predictions and labels don't match"
     @assert length(y) > L "Number of labels is less than length (L > y)"
