@@ -414,15 +414,15 @@ function precisionatL(y, yhat, grouping, L::Integer=20)
 end
 
 """
-    maxperformance(confusion::ROCNums, metric::Function)
+    maxperformance(confusion::AbstractVector{ROCNums}, metric::Function)
 
 Get maximum performance of a given metric over a set of confusion matrices.
 
 # Arguments
-- `confusion::ROCNums`: Confusion matrix object from MLBase
+- `confusion::AbstractVector{ROCNums}`: Confusion matrix object from MLBase
 - `̂metric::Function`: Performance metric function to use in evaluation.
 """
-function maxperformance(confusion::ROCNums, metric::Function)
+function maxperformance(confusion::AbstractVector{ROCNums}, metric::Function)
     performance = metric.(confusion)
     return maximum(performance)
 end
@@ -448,15 +448,15 @@ function maxperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, 
 end
 
 """
-    meanperf(confusion::ROCNums, metric::Function)
+    meanperformance(confusion::Vector{ROCNums}, metric::Function)
 
 Get mean performance of a given metric over a set of confusion matrices.
 
 # Arguments
-- `confusion::ROCNums`: Confusion matrix object from MLBase
+- `confusion::AbstractVector{ROCNums}`: Confusion matrix object from MLBase
 - `̂metric::Function`: Performance metric function to use in evaluation.
 """
-function meanperformance(confusion::ROCNums, metric::Function)
+function meanperformance(confusion::AbstractVector{ROCNums}, metric::Function)
     performance = metric.(confusion)
     return mean(performance)
 end
@@ -482,15 +482,15 @@ function meanperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64},
 end
 
 """
-    meanstdperf(confusion::ROCNums, metric::Function)
+    meanstdperformance(confusion::AbstractVector{ROCNums}, metric::Function)
 
 Get mean and standard deviation performance of a given metric over a set of confusion matrices.
 
 # Arguments
-- `confusion::ROCNums`: Confusion matrix object from MLBase
+- `confusion::AbstractVector{ROCNums}`: Confusion matrix object from MLBase
 - `̂metric::Function`: Performance metric function to use in evaluation.
 """
-function meanstdperformance(confusion::ROCNums, metric::Function)
+function meanstdperformance(confusion::AbstractVector{ROCNums}, metric::Function)
     performance = metric.(confusion)
     return mean_and_std(performance)
 end
