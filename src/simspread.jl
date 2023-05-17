@@ -516,7 +516,7 @@ function save(filepath::String, yhat::NamedMatrix, y::NamedMatrix; delimiter::Ch
                 y[qᵢ, tᵢ]
             ]
 
-            write(f, join(row, delimiter))
+            write(f, join(row, delimiter) * "\n")
         end
     end
 end
@@ -555,7 +555,7 @@ function save(filepath::String, fidx::Int64, yhat::NamedMatrix, y::NamedMatrix; 
                 y[qᵢ, tᵢ]
             ]
 
-            write(f, join(row, delimiter))
+            write(f, join(row, delimiter) * "\n")
         end
     end
 end
