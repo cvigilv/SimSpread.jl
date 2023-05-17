@@ -188,7 +188,10 @@ function construct(y::NamedMatrix, X::NamedMatrix, queries::AbstractVector)
 
     namedA = NamedArray(
         A,
-        (vcat(queries, sources, features, targets), vcat(queries, sources, features, targets))
+        (
+            string.(vcat(queries, sources, features, targets)),
+            string.(vcat(queries, sources, features, targets))
+        )
     )
     namedB = deepcopy(namedA)
     namedB[queries, :] .= 0
@@ -260,7 +263,10 @@ function construct(ys::T, Xs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
 
     namedA = NamedArray(
         A,
-        (vcat(queries, sources, features, targets), vcat(queries, sources, features, targets))
+        (
+            string.(vcat(queries, sources, features, targets)),
+            string.(vcat(queries, sources, features, targets))
+        )
     )
     namedB = deepcopy(namedA)
     namedB[queries, :] .= 0
@@ -325,7 +331,7 @@ function construct(y::NamedMatrix, X::NamedMatrix)
 
     A = Matrix([Mss Msf Mst; Mfs Mff Mft; Mts Mtf Mtt])
 
-    index_names = vcat(sources, features, targets)
+    index_names = string.(vcat(sources, features, targets))
 
     return NamedArray(A, (index_names, index_names))
 end
