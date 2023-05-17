@@ -182,9 +182,24 @@ end
         @test yhat == yhat′
     end
 
-    # TODO: Add unittests
     @testset "save" begin
-        @test skip = true
+        y = NamedArray([1 0 1; 0 1 0], (["s1", "s2"], ["t1", "t2", "t3"]))
+        yhat = deepcopy(y)
+
+        save("/tmp/SimSpread_test_save1", y, yhat)
+        save("/tmp/SimSpread_test_save2", y, yhat; delimiter = ' ')
+        save("/tmp/SimSpread_test_save3", 1, y, yhat)
+        save("/tmp/SimSpread_test_save4", 1, y, yhat; delimiter = ' ')
+
+        @test all(readlines(open("data/save1")) .== readlines(open("/tmp/SimSpread_test_save1")))
+        @test all(readlines(open("data/save2")) .== readlines(open("/tmp/SimSpread_test_save2")))
+        @test all(readlines(open("data/save3")) .== readlines(open("/tmp/SimSpread_test_save3")))
+        @test all(readlines(open("data/save4")) .== readlines(open("/tmp/SimSpread_test_save4")))
+
+        rm("/tmp/SimSpread_test_save1", force = true)
+        rm("/tmp/SimSpread_test_save2", force = true)
+        rm("/tmp/SimSpread_test_save3", force = true)
+        rm("/tmp/SimSpread_test_save4", force = true)
     end
 
 end
