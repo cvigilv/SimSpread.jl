@@ -539,7 +539,7 @@ Table format is:
 fold, source, target, score, label
 ```
 """
-function save(filepath::String, fidx::Int64, yhat::NamedMatrix, y::NamedMatrix; delimiter::Char='\t')
+function save(filepath::String, fidx::Int64, yhat::NamedMatrix, y::NamedMatrix; delimiter='\t')
     # Get name arrays
     queries = names(y, 1)
     targets = names(y, 2)
