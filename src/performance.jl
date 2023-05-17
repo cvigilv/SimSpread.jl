@@ -400,6 +400,29 @@ function maxperformance(confusion, metric::Function)
 end
 
 """
+  maxperformance(y::AbstractVector, yhat::AbstractVector, metric::Function)
+
+Brief description of intended functionality
+
+# Arguments
+- `y::AbstractVector` : 
+- `yhat::AbstractVector` : 
+- `metric::Function` : 
+
+# Extended help
+Longer description of intended functionality
+
+# References
+
+"""
+function maxperformance(y::AbstractVector, yhat::AbstractVector, metric::Function)
+    thresholds = sort(unique(yhat))
+    confusion = roc(y, yhat, thresholds)
+
+    return maxperformance(confusion, metric)
+end
+
+"""
     meanperf(confusion::ROCNums, metric::Function)
 
 Get mean performance of a given metric over a set of confusion matrices.
@@ -407,6 +430,13 @@ Get mean performance of a given metric over a set of confusion matrices.
 function meanperformance(confusion::ROCNums, metric::Function)
     performance = metric.(confusion)
     return mean(performance)
+end
+
+function meanperformance(y::AbstractVector, yhat::AbstractVector, metric::Function)
+    thresholds = sort(unique(yhat))
+    confusion = roc(y, yhat, thresholds)
+
+    return meanperformance(confusion, metric)
 end
 
 """
@@ -417,6 +447,13 @@ Get mean and standard deviation performance of a given metric over a set of conf
 function meanstdperformance(confusion::ROCNums, metric::Function)
     performance = metric.(confusion)
     return mean_and_std(performance)
+end
+
+function meanstdperformance(y::AbstractVector, yhat::AbstractVector, metric::Function)
+    thresholds = sort(unique(yhat))
+    confusion = roc(y, yhat, thresholds)
+
+    return meanstdperformance(confusion, metric)
 end
 
 """
