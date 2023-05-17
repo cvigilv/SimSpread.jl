@@ -12,24 +12,26 @@ matures into its final state.*
 
 ## What is SimSpread.jl?
 
-SimSpread.jl is a Julia implementation of the SimSpread formalism for link prediction. SimSpread
-is a novel approach for predicting interactions between two distinct set of nodes, query and
-target nodes, using a similarity measure vector between query nodes as a meta-description in
-combination with the network-based inference for link prediction.
+SimSpread.jl is a Julia implementation of the SimSpread formalism for link prediction.
+SimSpread is a novel approach for predicting interactions between two distinct set of
+nodes, query and target nodes, using a similarity measure vector between query nodes as
+a meta-description in combination with the network-based inference for link prediction.
 
 Originally developed for the prediction of pharmacological targets for a chemical compound,
-this packages generalizes the method to enable the prediction of links between any pair of nodes,
-e.g., user-object, reader-book, buyer-product, etc.
+this packages generalizes the method to enable the prediction of links between any pair of
+nodes, e.g., user-object, reader-book, buyer-product, etc.
 
 ## Installation
 
-In the Julia REPL:
+In the Julia REPL, enter the Julia package manager using the right backet character (`]`) and
+insert the following:
 ~~~ julia
-]add https://github.com/cvigilv/SimSpread.jl.git
+add https://github.com/cvigilv/SimSpread.jl.git
 ~~~
-The ] character starts the Julia package manager. Press the backspace key to return to the Julia prompt.
+Press the backspace key to return to the Julia prompt.
 
-Alternatively, the package can be installed using the `Pkg` Julia package:
+Alternatively, the package can be installed using the `Pkg` Julia package directly from the
+Julia prompt with the following:
 ~~~ julia
 using Pkg
 Pkg.add("https://github.com/cvigilv/SimSpread.jl.git")
@@ -37,12 +39,8 @@ Pkg.add("https://github.com/cvigilv/SimSpread.jl.git")
 
 For the newest version (development version, may break):
 ~~~ julia
-]add https://github.com/cvigilv/SimSpread.jl.git#develop
-~~~
-or
-~~~ julia
 using Pkg
-Pkg.add("https://github.com/cvigilv/SimSpread.jl.git#develop")
+Pkg.add("https://github.com/cvigilv/SimSpread.jl.git", rev = "develop")
 ~~~
 
 ## Examples
@@ -54,9 +52,8 @@ Please [open an issue](https://github.com/cvigilv/SimSpread.jl/issues/new) for s
 
 ## Contributing
 
-Please contribute using [Github Flow]
-(https://guides.github.com/introduction/flow/). Create a branch, add
-commits, and [open a pull request](https://github.com/cvigilv/SimSpread.jl/compare/).
+Please contribute using [Github Flow](https://guides.github.com/introduction/flow/).
+Create a branch, add commits, and [open a pull request](https://github.com/cvigilv/SimSpread.jl/compare/).
 
 ## License
 

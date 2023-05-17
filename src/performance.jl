@@ -88,21 +88,6 @@ function AuPRC(y::AbstractVector{Bool}, yhat::AbstractVector)
     return auc
 end
 
-# def eP(df, L, col_score="score", col_pred="tp"):
-#     P_L = precision_at_L(df, L, col_score, col_pred)
-#     D = sum(df[col_pred].values)
-#     M = len(df["ligand"].unique())
-#     N = len(df["target"].unique())
-#
-#     return P_L * M * N / D
-#
-#
-# def eR(df, L, col_score="score", col_pred="tp"):
-#     R_L = recall_at_L(df, L, col_score, col_pred)
-#     N = len(df["target"].unique())
-#
-#     return R_L * N / L
-
 """
     f1score(tn::T, fp::T, fn::T, tp::T) where {T<:Integer}
 
@@ -311,21 +296,53 @@ end
 precision(confusion::ROCNums) = precision(confusion.tn, confusion.fp, confusion.fn, confusion.tp)
 
 """
-    recallatL(y, yhat, grouping, L)
+    recallatL(y, yhat, L)
 
 Get recall@L as proposed by Wu, et al (2017).
 
 # Arguments
 - `y::AbstractVector`: Binary class labels. 1 for positive class, 0 otherwise.
 - `̂yhat::AbstractVector`: Prediction score.
-- `grouping::AbstractVector`: Group labels.
 - `L::Integer`: Length to consider to calculate metrics (default = 20).
 """
-function recallatL(y, yhat, grouping, L::Integer=20)
+function recallatL(y, yhat, L::Integer=20)
     @assert L > 0 "Please use a list length greater than 0 (L > 0)"
     @assert length(y) == length(yhat) "Number of predictions and labels don't match"
     @assert length(y) > L "Number of labels is less than length (L > y)"
     @assert length(yhat) > L "Number of predictions is less than length (L > yhat)"
+
+    # Sort predictions by score
+    order = sortperm(yhat, rev=true)
+    y = y[order]
+    yhat = y[order]
+
+    # Calculate recall@n for given group
+    Xi = sum(y)
+    Xi_L = sum(first(y, L))
+
+    if Xi > 0
+        return Xi_L / Xi
+    else
+        return NaN
+    end
+end
+
+"""
+    recallatL(y, yhat, L)
+
+Get mean recall@L per group as proposed by Wu, et al (2017).
+
+# Arguments
+- `y::AbstractVector`: Binary class labels. 1 for positive class, 0 otherwise.
+- `̂yhat::AbstractVector`: Prediction score.
+- `̂grouping::AbstractVector`: Group labels.
+- `L::Integer`: Length to consider to calculate metrics (default = 20).
+"""
+function recallatL(y, yhat, grouping, L::Integer=20)
+    @assert length(yhat) == length(grouping) "Number of groups must match number of predictions"
+    @assert length(y) == length(grouping) "Number of groups must match number of labels"
+    @assert length(y) == length(yhat) "Number of predictions must match number of labels"
+    @assert L > 0 "Please use a list length greater than 0 (L > 0)"
 
     performance = []
     for group in unique(grouping)
@@ -333,29 +350,44 @@ function recallatL(y, yhat, grouping, L::Integer=20)
         y_g = y[grouping.==group]
         yhat_g = yhat[grouping.==group]
 
-        # Sort predictions by score
-        order = sortperm(yhat_g, rev=true)
-        y_g = y_g[order]
-        yhat_g = y_g[order]
-
-        # Calculate recall@n for given group
-        Xi = sum(y_g)
-        Xi_L = sum(first(y_g, L))
-
-        if Xi > 0
-            push!(performance, Xi_L / Xi)
-        else
-            push!(performance, NaN)
-        end
+        push!(performance, recallatL(y_g, yhat_g, L))
     end
 
     return mean(performance)
 end
 
+
 """
-    precisionatL(y, yhat, grouping, L::Integer=20)
+    precisionatL(y, yhat, L::Integer=20)
 
 Get precision@L as proposed by Wu, et al (2017).
+
+# Arguments
+- `y::AbstractVector`: Binary class labels. 1 for positive class, 0 otherwise.
+- `̂yhat::AbstractVector`: Prediction score.
+- `L::Integer`: Length to consider to calculate metrics (default = 20).
+"""
+function precisionatL(y, yhat, L::Integer=20)
+    @assert L > 0 "Please use a list length greater than 0 (L > 0)"
+    @assert length(y) == length(yhat) "Number of predictions and labels don't match"
+    @assert length(y) > L "Number of labels is less than length (L > y)"
+    @assert length(yhat) > L "Number of predictions is less than length (L > yhat)"
+
+    # Sort predictions by score
+    order = sortperm(yhat, rev=true)
+    y = y[order]
+    yhat = y[order]
+
+    # Calculate precision@N
+    Xi_L = sum(first(y, L))
+
+    return Xi_L / L
+end
+
+"""
+    precisionatL(y, yhat, grouping, L)
+
+Get mean precision@L per group as proposed by Wu, et al (2017).
 
 # Arguments
 - `y::AbstractVector`: Binary class labels. 1 for positive class, 0 otherwise.
@@ -364,10 +396,10 @@ Get precision@L as proposed by Wu, et al (2017).
 - `L::Integer`: Length to consider to calculate metrics (default = 20).
 """
 function precisionatL(y, yhat, grouping, L::Integer=20)
+    @assert length(yhat) == length(grouping) "Number of groups must match number of predictions"
+    @assert length(y) == length(grouping) "Number of groups must match number of labels"
+    @assert length(y) == length(yhat) "Number of predictions must match number of labels"
     @assert L > 0 "Please use a list length greater than 0 (L > 0)"
-    @assert length(y) == length(yhat) "Number of predictions and labels don't match"
-    @assert length(y) > L "Number of labels is less than length (L > y)"
-    @assert length(yhat) > L "Number of predictions is less than length (L > yhat)"
 
     performance = []
     for group in unique(grouping)
@@ -375,47 +407,40 @@ function precisionatL(y, yhat, grouping, L::Integer=20)
         y_g = y[grouping.==group]
         yhat_g = yhat[grouping.==group]
 
-        # Sort predictions by score
-        order = sortperm(yhat_g, rev=true)
-        y_g = y_g[order]
-        yhat_g = y_g[order]
-
-        # Calculate precisionj@n for given group
-        Xi_L = sum(first(y_g, L))
-        push!(performance, Xi_L / L)
+        push!(performance, precisionatL(y_g, yhat_g, L))
     end
 
     return mean(performance)
 end
 
 """
-    maxperf(confusion::ROCNums, metric::Function)
+maxperformance(confusion::AbstractVector{ROCNums{Real}}, metric::Function)
 
 Get maximum performance of a given metric over a set of confusion matrices.
 
+# Arguments
+- `confusion::AbstractVector{ROCNums{Real}}`: Confusion matrices.
+- `̂metric::Function`: Performance metric function to use in evaluation.
 """
-function maxperformance(confusion, metric::Function)
+function maxperformance(confusion::AbstractVector{ROCNums{Int64}}, metric::Function)
     performance = metric.(confusion)
     return maximum(performance)
 end
 
 """
-  maxperformance(y::AbstractVector, yhat::AbstractVector, metric::Function)
+    maxperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
 
-Brief description of intended functionality
+Get maximum performance of a given metric over a pair of label-prediction vectors.
 
 # Arguments
-- `y::AbstractVector` : 
-- `yhat::AbstractVector` : 
-- `metric::Function` : 
-
-# Extended help
-Longer description of intended functionality
-
-# References
-
+- `y::AbstractVector{Bool}`: Binary class labels. 1 for positive class, 0 otherwise.
+- `̂yhat::AbstractVector{Float64}`: Prediction score.
+- `̂metric::Function`: Performance metric function to use in evaluation.
 """
-function maxperformance(y::AbstractVector, yhat::AbstractVector, metric::Function)
+function maxperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+    @assert length(y) == length(yhat) "The number of scores must be equal to the number of labels"
+
+    # Calculate confusion matrices for each threshold
     thresholds = sort(unique(yhat))
     confusion = roc(y, yhat, thresholds)
 
@@ -423,11 +448,15 @@ function maxperformance(y::AbstractVector, yhat::AbstractVector, metric::Functio
 end
 
 """
-    meanperf(confusion::ROCNums, metric::Function)
+    meanperformance(confusion::AbstractVector{ROCNums{Int64}}, metric::Function)
 
 Get mean performance of a given metric over a set of confusion matrices.
+
+# Arguments
+- `confusion::AbstractVector{ROCNums{Int64}}`: Confusion matrices
+- `̂metric::Function`: Performance metric function to use in evaluation.
 """
-function meanperformance(confusion::ROCNums, metric::Function)
+function meanperformance(confusion::AbstractVector{ROCNums{Int64}}, metric::Function)
     performance = metric.(confusion)
     return mean(performance)
 end
@@ -440,11 +469,35 @@ function meanperformance(y::AbstractVector, yhat::AbstractVector, metric::Functi
 end
 
 """
-    meanstdperf(confusion::ROCNums, metric::Function)
+    meanperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+
+Get mean performance of a given metric over a pair of label-prediction vectors.
+
+# Arguments
+- `y::AbstractVector`: Binary class labels. 1 for positive class, 0 otherwise.
+- `̂yhat::AbstractVector`: Prediction score.
+- `̂metric::Function`: Performance metric function to use in evaluation.
+"""
+function meanperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+    @assert length(y) == length(yhat) "The number of scores must be equal to the number of labels"
+
+    # Calculate confusion matrices for each threshold
+    thresholds = sort(unique(yhat))
+    confusion = roc(y, yhat, thresholds)
+
+    return meanperformance(confusion, metric)
+end
+
+"""
+    meanstdperformance(confusion::AbstractVector{ROCNums{Real}}, metric::Function)
 
 Get mean and standard deviation performance of a given metric over a set of confusion matrices.
+
+# Arguments
+- `confusion::AbstractVector{ROCNums{Real}}`: Confusion matrix object from MLBase
+- `̂metric::Function`: Performance metric function to use in evaluation.
 """
-function meanstdperformance(confusion::ROCNums, metric::Function)
+function meanstdperformance(confusion::AbstractVector{ROCNums{Int64}}, metric::Function)
     performance = metric.(confusion)
     return mean_and_std(performance)
 end
@@ -457,15 +510,51 @@ function meanstdperformance(y::AbstractVector, yhat::AbstractVector, metric::Fun
 end
 
 """
-    count_zeros(yhat::AbstractVector)
-Counts the number of empty predictions (score equal to 0) in a array of scores
+    meanstdperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+
+Get mean and standard deviation performance of a given metric over a pair of label-prediction
+vectors.
+
+# Arguments
+- `y::AbstractVector`: Binary class labels. 1 for positive class, 0 otherwise.
+- `̂yhat::AbstractVector`: Prediction scores.
+- `̂metric::Function`: Performance metric function to use in evaluation.
 """
-function count_zeros(yhat::AbstractVector)
-    count = 0
-    for x in yhat
-        if x == 0
-            count += 1
-        end
-    end
-    return count
+function meanstdperformance(y::AbstractVector{Bool}, yhat::AbstractVector{Float64}, metric::Function)
+    @assert length(y) == length(yhat) "The number of scores must be equal to the number of labels"
+
+    # Calculate confusion matrices for each threshold
+    thresholds = sort(unique(yhat))
+    confusion = roc(y, yhat, thresholds)
+
+    return meanstdperformance(confusion, metric)
+end
+
+"""
+    validity_ratio(yhat::AbstractVector)
+
+Ratio of valid predictions (score > 0) and all predictions. Allows to check if predictive
+performance is given for all predictions or a subset of the predictions.
+
+# Arguments
+- `yhat::AbstractVector` : Prediction scores.
+
+# Extended help
+A limitation of SimSpread is that it is impossible to generate predictions for query nodes
+whose similarity to every source of the first network layer is below the similarity threshold α.
+In this case, the length of the feature vector is zero, resource spreading is not possible, and
+the predicted value is zero for all targets, therefore we need guardrails to correctly assess 
+performance as a function of the threshold α.
+
+This characteristic of SimSpread can be seen as an intrinsic notion of its application domain.
+No target predictions are generated for query nodes outside SimSpread’s application domain
+instead of returning likely meaningless targets.
+
+# References
+1. Vigil-Vásquez & Schüller (2022). De Novo Prediction of Drug Targets and Candidates by
+   Chemical Similarity-Guided Network-Based Inference. International Journal of Molecular
+   Sciences, 23(17), 9666. https://doi.org/10.3390/ijms23179666
+"""
+function validity_ratio(yhat::AbstractVector)
+    return sum(!iszero, yhat)/length(yhat)
 end
