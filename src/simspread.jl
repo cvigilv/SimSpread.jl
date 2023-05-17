@@ -510,8 +510,8 @@ function save(filepath::String, yhat::NamedMatrix, y::NamedMatrix; delimiter::Ch
         for qᵢ in queries, tᵢ in targets
             row = [
                 findfirst(id -> id == qᵢ, queries),
-                qᵢ,
-                tᵢ,
+                '"' * qᵢ * '"',
+                '"' * tᵢ * '"',
                 yhat[qᵢ, tᵢ],
                 y[qᵢ, tᵢ]
             ]
@@ -549,8 +549,8 @@ function save(filepath::String, fidx::Int64, yhat::NamedMatrix, y::NamedMatrix; 
         for qᵢ in queries, tᵢ in targets
             row = [
                 fidx,
-                qᵢ,
-                tᵢ,
+                '"' * qᵢ * '"',
+                '"' * tᵢ * '"',
                 yhat[qᵢ, tᵢ],
                 y[qᵢ, tᵢ]
             ]
