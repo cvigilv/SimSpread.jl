@@ -353,7 +353,7 @@ function recallatL(y, yhat, grouping, L::Integer=20)
 end
 
 """
-    precisionatL(y, yhat, grouping, L)
+    precisionatL(y, yhat, grouping, L::Integer=20)
 
 Get precision@L as proposed by Wu, et al (2017).
 
@@ -363,7 +363,7 @@ Get precision@L as proposed by Wu, et al (2017).
 - `grouping::AbstractVector`: Group labels.
 - `L::Integer`: Length to consider to calculate metrics (default = 20).
 """
-function precisionatL(y, yhat, grouping, L)
+function precisionatL(y, yhat, grouping, L::Integer=20)
     @assert L > 0 "Please use a list length greater than 0 (L > 0)"
     @assert length(y) == length(yhat) "Number of predictions and labels don't match"
     @assert length(y) > L "Number of labels is less than length (L > y)"
