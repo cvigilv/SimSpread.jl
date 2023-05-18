@@ -23,24 +23,15 @@ nodes, e.g., user-object, reader-book, buyer-product, etc.
 
 ## Installation
 
-In the Julia REPL, enter the Julia package manager using the right backet character (`]`) and
-insert the following:
+The package can be installed using the `Pkg` Julia package directly from the Julia prompt with
+the following:
 ~~~ julia
-add https://github.com/cvigilv/SimSpread.jl.git
-~~~
-Press the backspace key to return to the Julia prompt.
-
-Alternatively, the package can be installed using the `Pkg` Julia package directly from the
-Julia prompt with the following:
-~~~ julia
-using Pkg
-Pkg.add("https://github.com/cvigilv/SimSpread.jl.git")
+using Pkg; Pkg.add(url = "https://github.com/cvigilv/SimSpread.jl.git")
 ~~~
 
 For the newest version (development version, may break):
 ~~~ julia
-using Pkg
-Pkg.add("https://github.com/cvigilv/SimSpread.jl.git", rev = "develop")
+using Pkg; Pkg.add(url = "https://github.com/cvigilv/SimSpread.jl.git", rev = "develop")
 ~~~
 
 ## Examples
