@@ -24,7 +24,9 @@ export writedlm,
     # SimSpread
     spread,
     cutoff,
+    cutoff!,
     featurize,
+    featurize!,
     split,
     construct,
     predict,
@@ -45,5 +47,6 @@ export writedlm,
     precisionatL,
     meanperformance,
     meanstdperformance,
-    maxperformance
+    maxperformance,
+    validity_ratio
 end
