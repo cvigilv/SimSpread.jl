@@ -2,16 +2,20 @@
 CurrentModule = SimSpread
 ```
 
-# SimSpread
+# SimSpread.jl
 
-Documentation for [SimSpread](https://github.com/cvigilv/SimSpread.jl).
+A package implementing the SimSpread formalism for link prediction.
 
-```@index
+## Installation
+SimSpread.jl can be installed typing
+```julia
+Pkg.add(url="https://github.com/cvigilv/SimSpread.jl.git", rev="develop")
 ```
+in the Julia REPL.
 
-```@autodocs
-Modules = [SimSpread]
-```
+## Package Features
 
-# Tutorial
-- [Tutorial 1 - Getting Started](./tutorial1.md)
+- Core implementation of SimSpread preditive algorithm
+- Helper functions for preparation and construction of query graphs
+- Helper function for cross-validation
+- Performance assessment metrics

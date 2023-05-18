@@ -22,11 +22,12 @@ makedocs(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://cvigilv.github.io/SimSpread.jl",
         edit_link="main",
-        assets=String[],
+        assets=[],
     ),
     pages=[
-        "Home" => "index.md",
-        "Getting starter with `SimSpread.jl`" => "tutorial/1-getting-started.md",
+        "Welcome to SimSpread.jl" => "index.md",
+        "Getting started" => "tutorial/getting-started.md",
+        "API" => "api.md",
     ],
 )
 

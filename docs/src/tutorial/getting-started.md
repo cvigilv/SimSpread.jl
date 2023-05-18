@@ -1,38 +1,40 @@
 ```@meta
-EditURL = "<unknown>/src/tutorial/1-getting-started.jl"
+EditURL = "<unknown>/docs/src/tutorial/getting-started.jl"
 ```
 
-# Tutorial 1 - Getting started with SimSpread.jl
+# Getting started with SimSpread.jl
 
-This is a short and concise tutorial to start using SimSpread, using as
-example dataset the classical "Iris" dataset proposed by R.A. Fisher.
+TODO: Small introdution to SimSpread, its origins and use cases
 
 ## Preparing our environment
 
 Firstly, we must install the necesary packages we will use in this tutorial:
 
-````@example 1-getting-started
+````@example getting-started
 import Pkg
-Pkg.add(["MLDatasets", "NamedArrays", "Distances", "DataFrames", "AlgebraOfGraphics", "CairoMakie"])
+Pkg.add(["MLDatasets", "NamedArrays", "Distances", "DataFrames", "AlgebraOfGraphics", "CairoMakie"]);
+nothing #hide
 ````
 
 Pkg.add(url="https://github.com/cvigilv/SimSpread.jl.git", rev="develop")
 
-Now, we wil go ahead and load the dataset we will use:
+For this short and concise tutorial, we will use as an example the classic
+"Iris" dataset proposed by R.A. Fisher, in a classification problem. Let's
+go ahead and load the dataset:
 
-````@example 1-getting-started
+````@example getting-started
 using MLDatasets, DataFrames
 
 iris = Iris().dataframe
 first(iris, 5)
 ````
 
-Since we will use SimSpread a a classification algorithm in a multi-class
-scenario, we need to convert the single column of `class` into 3 distinct
-columns corresponding to each of the classes in the dataset. For this,
-we can one-hot encode over each row using the following transformation:
+Since we will use SimSpread as a classification algorithm for a single-class
+problem, we need to convert the `class` column into 3 distinct columns
+corresponding to each of the classes in the dataset, i.e., one-hot encode
+the class column. For this, we can use the following transformation
 
-````@example 1-getting-started
+````@example getting-started
 transform!(
     iris,
     :class => ByRow(c -> c .== "Iris-setosa") => "Is Iris-setosa?",
@@ -42,15 +44,19 @@ transform!(
 first(iris, 5)
 ````
 
+and obtain 3 columns that encode the class for each plant.
+
 ## Data splitting
 
-To assess the performance of SimSpread, we will split the `iris` dataset
+Next, we will train a model using SimSpread to predict the classes for a
+subset of plants in the Iris dataset. For this, we will split our dataset
 in 2 groups: training set, which will correspond to 80% of the data, and
 testing set, which will correspond to the remaining 20%.
 
-We will shuffle and split the dataset with the following code:
+For this, will first shuffle the plants and extract the first 20% of the
+dataset with the following code:
 
-````@example 1-getting-started
+````@example getting-started
 using Random
 
 Random.seed!(1)
@@ -61,27 +67,47 @@ train_idx = last(perm, Int(0.8 * N))
 test_idx = first(perm, Int(0.2 * N))
 
 Xtrain = iris[train_idx, ["sepallength", "sepalwidth", "petallength", "petalwidth"]]
-Xtest = iris[test_idx, ["sepallength", "sepalwidth", "petallength", "petalwidth"]]
+Xtest  = iris[test_idx,  ["sepallength", "sepalwidth", "petallength", "petalwidth"]]
 ytrain = iris[train_idx, ["Is Iris-setosa?", "Is Iris-versicolor?", "Is Iris-virginica?"]]
-ytest = iris[test_idx, ["Is Iris-setosa?", "Is Iris-versicolor?", "Is Iris-virginica?"]]
+ytest  = iris[test_idx,  ["Is Iris-setosa?", "Is Iris-versicolor?", "Is Iris-virginica?"]];
+nothing #hide
 ````
 
-````@example 1-getting-started
+The first 5 entries of the training set have the following features:
+
+````@example getting-started
 first(Xtrain, 5)
 ````
 
-````@example 1-getting-started
+And the following one-hot encoded classes:
+
+````@example getting-started
 first(ytrain, 5)
+````
+
+The first 5 entries of the test set have the following features:
+
+````@example getting-started
+first(Xtest, 5)
+````
+
+And the following one-hot encoded classes:
+
+````@example getting-started
+first(ytest, 5)
 ````
 
 ## Meta-description preparation
 
-In order for SimSpread to predict the classification of
-SimSpread works using a meta-description of the query nodes, which is obtained from a
-transformation of the source node features, which follows:
+SimSpread works using a meta-description based out of similarity between
+objects (in this tutorial, plants). For this, we first need to compute how
+similar plants in the training set are (all-vs-all comparison) and how similar
+are the plants in the testing set to the training set.
 
-1. Calculate the pairwise simlarity of the source nodes using its respective features.
-2. Apply a similarity threshold over the source nodes similarity matrix
+Once that is computed, we construct the meta-description using a similarity
+threshold that creates a new matrix that encodes the question "Is plant _A_ similar
+to plant _B_?".
+
 3. Weight the transformed similarity matrix using a binary, $s^\prime_{i,j} = s_{i,j} > 0$,
    or continuous, $s^\prime_{i,j} = (s_{i,j} > 0) \times s_{i,j}$, transformation.
 
@@ -91,40 +117,48 @@ The resulting matrix corresponds to the new feature matrix, corresponding to a m
 For the example, we will use the Jaccard index as our similarity measure, since its bound
 between 0 and 1:
 
-````@example 1-getting-started
+````@example getting-started
 using Distances, NamedArrays
 
+
 Dtrain = 1 .- pairwise(Jaccard(), Matrix(Xtrain), dims=1)
-Dtest = 1 .- pairwise(Jaccard(), Matrix(Xtest), Matrix(Xtrain), dims=1)
-Dtrain = NamedArray(Dtrain, (["E$i" for i in train_idx], ["E$i" for i in train_idx]))
-Dtest = NamedArray(Dtest, (["E$i" for i in test_idx], ["E$i" for i in train_idx]));
+Dtest  = 1 .- pairwise(Jaccard(), Matrix(Xtest), Matrix(Xtrain), dims=1)
+
+Dtrain = NamedArray(Dtrain, (["E$i" for i in train_idx], ["E$i" for i in train_idx] ))
+Dtest  = NamedArray(Dtest, (["E$i" for i in test_idx], ["E$i" for i in train_idx] ));
 nothing #hide
 ````
 
 and will use a cutoff of $J(x,y) = 0.9$, since this generally represent comparison between
 two highly similar entities:
 
-````@example 1-getting-started
+````@example getting-started
 using SimSpread
+
+class_names = ["Is Iris-setosa?", "Is Iris-versicolor?", "Is Iris-virginica?"]
 
 α = 0.9
 Xtrain′ = featurize(Dtrain, α, true)
-Xtest′ = featurize(Dtest, α, true)
-ytrain′ = NamedArray(Matrix{Float64}(ytrain), (["E$i" for i in train_idx], ["C$i" for i in 1:3]))
-ytest′ = NamedArray(Matrix{Float64}(ytest), (["E$i" for i in test_idx], ["C$i" for i in 1:3]))
+Xtest′  = featurize(Dtest, α, true)
+ytrain′ = NamedArray(Matrix{Float64}(ytrain), (["E$i" for i in train_idx], class_names))
+ytest′  = NamedArray(Matrix{Float64}(ytest), (["E$i" for i in test_idx], class_names));
+nothing #hide
 ````
 
 ## Predicting labels with SimSpread
 
+Now that we have all the information necessary for SimSpread, we can construct the query graph
+that is used to predict links using network-based-inference resource allocation algorithm.
+
 In first place, we need to construct the query network for label prediction:
 
-````@example 1-getting-started
+````@example getting-started
 G = construct(ytrain′, ytest′, Xtrain′, Xtest′)
 ````
 
 From this, we can predict the labels as follows:
 
-````@example 1-getting-started
+````@example getting-started
 ŷtrain = predict(G, ytrain′)
 ŷtest = predict(G, ytest′)
 
@@ -139,7 +173,7 @@ label with the highest score as the predicted label.
 
 To convert the problem from single-class to multi-class, we do the following:
 
-````@example 1-getting-started
+````@example getting-started
 class_mapper = ["Iris-setosa", "Iris-versicolor", "Iris-virginica"]
 
 ŷ = hcat(
@@ -166,7 +200,7 @@ training and testing sets:
 
 Let's start with accuracy:
 
-````@example 1-getting-started
+````@example getting-started
 using AlgebraOfGraphics, CairoMakie
 
 df = (
@@ -192,7 +226,7 @@ draw(plt; axis=(width=400, height=225))
 As we can see, our proposed SimSpread model achieves high accuracy for both training and
 testing sets. Let's see the error rates for the same grouping:
 
-````@example 1-getting-started
+````@example getting-started
 df = (
     train=[Bool(i ∈ train_idx) for i in 1:N],
     y=iris[!, "class"],
@@ -220,7 +254,7 @@ training set.
 Let's visualize where the predicted classes fall in our training and testing sets. First, lets see our
 ground truth:
 
-````@example 1-getting-started
+````@example getting-started
 df = (
     sepallength=iris[!, "sepallength"],
     petallength=iris[!, "petallength"],
@@ -242,7 +276,7 @@ might respond to what we have see in the predictive performance.
 Let's visualize the prediction over this scatter plot to map where are the incorrect
 predictions:
 
-````@example 1-getting-started
+````@example getting-started
 df = (
     sepallength=iris[!, "sepallength"],
     petallength=iris[!, "petallength"],
