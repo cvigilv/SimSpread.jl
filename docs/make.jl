@@ -1,6 +1,6 @@
 using SimSpread
 using Documenter
-using Literate, Glob, CairoMakie
+using Pkg, Literate, Glob, CairoMakie
 
 CairoMakie.activate!(type="svg")
 
@@ -32,6 +32,9 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/cvigilv/SimSpread.jl",
-    devbranch="main",
+    repo="github.com/cvigilv/SimSpread.jl/",
+    branch = "gh-pages",
+    devbranch="develop",
+    devurl = "develop",
+    deps = Pkg.add(["MLDatasets", "NamedArrays", "Distances", "DataFrames", "AlgebraOfGraphics", "CairoMakie"])
 )

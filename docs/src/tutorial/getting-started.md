@@ -8,16 +8,6 @@ TODO: Small introdution to SimSpread, its origins and use cases
 
 ## Preparing our environment
 
-Firstly, we must install the necesary packages we will use in this tutorial:
-
-````@example getting-started
-import Pkg
-Pkg.add(["MLDatasets", "NamedArrays", "Distances", "DataFrames", "AlgebraOfGraphics", "CairoMakie"]);
-nothing #hide
-````
-
-Pkg.add(url="https://github.com/cvigilv/SimSpread.jl.git", rev="develop")
-
 For this short and concise tutorial, we will use as an example the classic
 "Iris" dataset proposed by R.A. Fisher, in a classification problem. Let's
 go ahead and load the dataset:
@@ -227,12 +217,6 @@ As we can see, our proposed SimSpread model achieves high accuracy for both trai
 testing sets. Let's see the error rates for the same grouping:
 
 ````@example getting-started
-df = (
-    train=[Bool(i ∈ train_idx) for i in 1:N],
-    y=iris[!, "class"],
-    yhat=ŷ[sortperm(ŷ[:, 1]), 2]
-)
-
 plt = data(df)
 plt *= expectation()
 plt *= mapping(

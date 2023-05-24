@@ -4,11 +4,6 @@
 #
 # ## Preparing our environment
 #
-# Firstly, we must install the necesary packages we will use in this tutorial:
-import Pkg
-Pkg.add(["MLDatasets", "NamedArrays", "Distances", "DataFrames", "AlgebraOfGraphics", "CairoMakie"]);
-# Pkg.add(url="https://github.com/cvigilv/SimSpread.jl.git", rev="develop")
-
 # For this short and concise tutorial, we will use as an example the classic
 # "Iris" dataset proposed by R.A. Fisher, in a classification problem. Let's
 # go ahead and load the dataset:
