@@ -219,8 +219,8 @@ function construct(ys::T, Xs::T) where {T<:Tuple{NamedMatrix,NamedMatrix}}
     ytrain, ytest = ys
     Xtrain, Xtest = Xs
 
-    @assert size(ytrain, 2) == size(ytest, 2) "Number of targets between test and training sets doens't match"
-    @assert size(Xtrain, 2) == size(Xtest, 2) "Number of features between test and training sets doens't match"
+    @assert size(ytrain, 2) == size(ytest, 2) "Number of targets between test and training sets doesn't match"
+    @assert size(Xtrain, 2) == size(Xtest, 2) "Number of features between test and training sets doesn't match"
 
     # Get names from matrices
     features = names(Xtrain, 2)
