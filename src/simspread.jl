@@ -89,21 +89,21 @@ function cutoff!(X::AbstractVecOrMat{T}, α::T, weighted::Bool=false) where {T<:
 end
 
 """
-    featurize(X::NamedArray, α::AbstractFloat, weighted::Bool=false)
+    featurize(X::NamedArray, α::AbstractFloat, weighted::Bool=true)
 
 Transform the feature matrix `X` into a SimSpread feature matrix.
 
 # Arguments
 - `X::NamedArray`: Continuous feature matrix
 - `α::AbstractFloat`: Featurization cutoff
-- `weighted::Bool` : Apply weighting function to outcome (default = false)
+- `weighted::Bool` : Apply weighting function to outcome (default = true)
 
 # References
 1. Vigil-Vásquez & Schüller (2022). De Novo Prediction of Drug Targets and Candidates by
    Chemical Similarity-Guided Network-Based Inference. International Journal of Molecular
    Sciences, 23(17), 9666. https://doi.org/10.3390/ijms23179666
 """
-function featurize(X::NamedArray, α::AbstractFloat, weighted::Bool=false)
+function featurize(X::NamedArray, α::AbstractFloat, weighted::Bool=true)
     # Filter matrix
     X′ = copy(X)
     X′.array = cutoff.(X.array, α, weighted)
@@ -112,21 +112,21 @@ function featurize(X::NamedArray, α::AbstractFloat, weighted::Bool=false)
 end
 
 """
-    featurize!(X::NamedArray, α::AbstractFloat, weighted::Bool=false)
+    featurize!(X::NamedArray, α::AbstractFloat, weighted::Bool=true)
 
 Transform, in place, the feature matrix `X` into a SimSpread feature matrix.
 
 # Arguments
 - `X::NamedArray` : Continuous feature matrix
 - `α::AbstractFloat` : Featurization cutoff
-- `weighted::Bool` : Apply weighting function to outcome (default = false)
+- `weighted::Bool` : Apply weighting function to outcome (default = true)
 
 # References
 1. Vigil-Vásquez & Schüller (2022). De Novo Prediction of Drug Targets and Candidates by
    Chemical Similarity-Guided Network-Based Inference. International Journal of Molecular
    Sciences, 23(17), 9666. https://doi.org/10.3390/ijms23179666
 """
-function featurize!(X::NamedArray, α::AbstractFloat, weighted::Bool=false)
+function featurize!(X::NamedArray, α::AbstractFloat, weighted::Bool=true)
     X.array = cutoff.(X.array, α, weighted)
     setnames!(X, ["f$f" for f in names(X, 2)], 2)
 end
