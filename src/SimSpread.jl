@@ -1,6 +1,7 @@
 module SimSpread
 
 import DelimitedFiles.writedlm
+import Downloads.download
 
 using Base
 using CUDA
@@ -15,6 +16,7 @@ include("graphs.jl")
 include("performance.jl")
 include("simspread.jl")
 include("utils.jl")
+include("examples.jl")
 
 export writedlm,
     # General utilities
@@ -48,5 +50,8 @@ export writedlm,
     meanperformance,
     meanstdperformance,
     maxperformance,
-    validity_ratio
+    validity_ratio,
+
+    # Examples
+    getyamanishi
 end

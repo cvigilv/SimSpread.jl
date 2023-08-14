@@ -304,3 +304,61 @@ end
         end
     end
 end
+
+@testset verbose = true "SimSpread Examples" begin
+    @testset "Yamanishi (2008)" begin
+        @testset "Nuclear Receptor" begin
+            dt, dd = getyamanishi("nr")
+
+            @test dt[1:3, 1:3].array ≈ [0.0 0.0 0.0; 0.0 1.0 0.0; 0.0 1.0 0.0]
+            @test dd[1:3, 1:3].array ≈ [1.0 0.545455 0.297297; 0.545455 1.0 0.387097; 0.297297 0.387097 1.0]
+
+            @test names(dt, 1)[1:3] == ["D00040", "D00066", "D00067"]
+            @test names(dt, 2)[1:3] == ["hsa190", "hsa2099", "hsa2100"]
+            @test names(dd, 1)[1:3] == names(dd, 2)[1:3]
+            @test names(dd, 1)[1:3] == ["D00040", "D00066", "D00067"]
+        end
+
+        @testset "Ion Channel" begin
+            dt, dd = getyamanishi("ic")
+
+            @test dt[1:3, 1:3].array ≈ [0.0 0.0 0.0; 0.0 0.0 0.0; 0.0 0.0 0.0]
+            @test dd[1:3, 1:3].array ≈ [1.0 0.111111 0.0625; 0.111111 1.0 0.2; 0.0625 0.2 1.0]
+
+            @test names(dt, 1)[1:3] == ["D00035", "D00110", "D00136"]
+            @test names(dt, 2)[1:3] == ["hsa10008", "hsa10060", "hsa10369"]
+            @test names(dd, 1)[1:3] == names(dd, 2)[1:3]
+            @test names(dd, 1)[1:3] == ["D00035", "D00110", "D00136"]
+        end
+
+        @testset "GPCR" begin
+            dt, dd = getyamanishi("gpcr")
+
+            @test dt[1:3, 1:3].array ≈ [0.0 0.0 0.0; 0.0 0.0 0.0; 0.0 0.0 0.0]
+            @test dd[1:3, 1:3].array ≈ [1.0 0.352941 0.096774; 0.352941 1.0 0.181818; 0.096774 0.181818 1.0]
+
+            @test names(dt, 1)[1:3] == ["D00049", "D00059", "D00079"]
+            @test names(dt, 2)[1:3] == ["hsa10161", "hsa10800", "hsa11255"]
+            @test names(dd, 1)[1:3] == names(dd, 2)[1:3]
+            @test names(dd, 1)[1:3] == ["D00049", "D00059", "D00079"]
+        end
+
+        @testset "Enzyme" begin
+            dt, dd = getyamanishi("e")
+
+            @test dt[1:3, 1:3].array ≈ [1.0 0.0 0.0; 0.0 0.0 0.0; 0.0 0.0 0.0]
+            @test dd[1:3, 1:3].array ≈ [1.0 0.469697 0.038462; 0.515625 1.0 0.032787; 0.038462 0.032787 1.0]
+
+            @test names(dt, 1)[1:3] == ["D00002", "D00005", "D00007"]
+            @test names(dt, 2)[1:3] == ["hsa10", "hsa100", "hsa10056"]
+            @test names(dd, 1)[1:3] == names(dd, 2)[1:3]
+            @test names(dd, 1)[1:3] == ["D00002", "D00005", "D00007"]
+        end
+
+        @testset "Invalid ID" begin
+            @test_throws AssertionError(
+                "Please provide a valid dataset ID. Refer to `??getyamanishi`"
+            ) getyamanishi("a")
+        end
+    end
+end
