@@ -114,7 +114,7 @@ end
         M = [1.0 0.0 0.0; 1.0 1.0 0.0; 1.0 1.0 1.0]
         W = [1.0 0.0 0.0; 0.5 0.5 0.0; 0.33333 0.33333 0.33333]
 
-        @test spread(M) ≈ W rtol=10^-5
+        @test spread(M) ≈ W rtol = 10^-5
     end
 
     @testset "predict" begin
@@ -154,7 +154,7 @@ end
         y = NamedArray(Matrix{Float64}([0 1]), (["q1"], ["t1", "t2"]))
 
         @test SimSpread.predict(A, B, y) == yhat
-        @test SimSpread.predict((A,B),y) == yhat
+        @test SimSpread.predict((A, B), y) == yhat
     end
 
     @testset "clean!" begin
@@ -187,19 +187,19 @@ end
         yhat = deepcopy(y)
 
         save("/tmp/SimSpread_test_save1", y, yhat)
-        save("/tmp/SimSpread_test_save2", y, yhat; delimiter = ' ')
+        save("/tmp/SimSpread_test_save2", y, yhat; delimiter=' ')
         save("/tmp/SimSpread_test_save3", 1, y, yhat)
-        save("/tmp/SimSpread_test_save4", 1, y, yhat; delimiter = ' ')
+        save("/tmp/SimSpread_test_save4", 1, y, yhat; delimiter=' ')
 
         @test all(readlines(open("data/save1")) .== readlines(open("/tmp/SimSpread_test_save1")))
         @test all(readlines(open("data/save2")) .== readlines(open("/tmp/SimSpread_test_save2")))
         @test all(readlines(open("data/save3")) .== readlines(open("/tmp/SimSpread_test_save3")))
         @test all(readlines(open("data/save4")) .== readlines(open("/tmp/SimSpread_test_save4")))
 
-        rm("/tmp/SimSpread_test_save1", force = true)
-        rm("/tmp/SimSpread_test_save2", force = true)
-        rm("/tmp/SimSpread_test_save3", force = true)
-        rm("/tmp/SimSpread_test_save4", force = true)
+        rm("/tmp/SimSpread_test_save1", force=true)
+        rm("/tmp/SimSpread_test_save2", force=true)
+        rm("/tmp/SimSpread_test_save3", force=true)
+        rm("/tmp/SimSpread_test_save4", force=true)
     end
 
 end
@@ -228,8 +228,8 @@ end
             yhat = vec(collect(1:1:10))
             y = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 
-            @test recallatL(y, yhat, grouping, 5) ≈ 3/3
-            @test recallatL(y, yhat, grouping, 1) ≈ 1/3
+            @test recallatL(y, yhat, grouping, 5) ≈ 3 / 3
+            @test recallatL(y, yhat, grouping, 1) ≈ 1 / 3
         end
 
         @testset "precisionatL" begin
@@ -237,8 +237,8 @@ end
             yhat = vec(collect(1:1:10))
             y = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 
-            @test precisionatL(y, yhat, grouping, 5) ≈ 3/5
-            @test precisionatL(y, yhat, grouping, 1) ≈ 1/1
+            @test precisionatL(y, yhat, grouping, 5) ≈ 3 / 5
+            @test precisionatL(y, yhat, grouping, 1) ≈ 1 / 1
         end
     end
 
@@ -299,7 +299,7 @@ end
         end
 
         # TODO: Add unittests
-        @testset "maxperformanc" begin
+        @testset "maxperformance" begin
             @test skip = true
         end
     end
