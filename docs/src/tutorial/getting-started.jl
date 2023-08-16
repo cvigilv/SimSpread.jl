@@ -1,239 +1,156 @@
 # # Getting started with SimSpread.jl
+# SimSpread is a novel approach for predicting interactions between two distinct set of
+# nodes, query and target nodes, using a similarity measure vector between query nodes as
+# a meta-description in combination with the network-based inference for link prediction.
 #
-# TODO: Small introdution to SimSpread, its origins and use cases
-#
-# SimSpread consist of N main steps:
-# 1. 
-# 2. 
-# 3. Construction of a metadescription-object-target network
-# 4. Resource-spreading algorithm to predict the probability an edge between a
-#    object and target interact.
+# In this tutorial, we will skim through the basic workflow for using `SimSpread.jl` using
+# as an example the prediction of dug-target interactions for the Nuclear Receptor dataset
+# from Yamanishi, et al (2008).
 #
 # ## Preparing our problem
-#
-# For this introductory tutorial, we will use as an example the classic "Iris"
-# dataset proposed by R.A. Fisher, in a classification problem. Let's go ahead
-# and load the dataset:
-using MLDatasets, DataFrames
+# First, we will download the known drug-target interaction matrix and drug-drug SIMCOMP
+# similarity matrix for the 'Nuclear Receptor' dataset. The package provides a helper for
+# easy download and preparation for this group of datasets (refer to `??getyamanishi`
+# for more information).
+using CairoMakie #hide
+using NamedArrays # hide
+CairoMakie.activate!() # hide
+using SimSpread
 
-iris = Iris().dataframe
-first(iris, 3)
+DT, DD = getyamanishi("nr")
+nothing #hide
 
-# Since we will use SimSpread as a classification algorithm for a single-class
-# problem, we need to convert the `class` column into 3 distinct columns
-# corresponding to each of the classes in the dataset, i.e., one-hot encode
-# the class column. For this, we can use the following transformation
-transform!(
-    iris,
-    :class => ByRow(c -> c .== "Iris-setosa") => "Is Iris-setosa?",
-    :class => ByRow(c -> c .== "Iris-versicolor") => "Is Iris-versicolor?",
-    :class => ByRow(c -> c .== "Iris-virginica") => "Is Iris-virginica?",
-)
-first(iris, 3)
-
-# and obtain 3 columns that encode the class for each plant.
+# Let's visualize our data as heatmaps:
+heatmaps(M::NamedArray, N::NamedArray) = begin #hide
+    M′ =  M' #hide
+    N′ =  N' #hide
+    f = Figure(resolution=(700, 300)) #hide
+    axdt, _ = heatmap(f[1, 1], M′.array; colorrange=(0, 1), colormap=:binary) #hide
+    axdd, hmdd = heatmap(f[1, 2], N′.array; colorrange=(0, 1), colormap=:binary) #hide
+    Colorbar(f[1, 3], hmdd; label="SIMCOMP similarity") #hide
+    axdt.title = "Drug-Target\ninteractions" #hide
+    axdd.title = "Drug-Drug\nsimilarity" #hide
+    axdt.xlabel = "Targets" #hide
+    axdt.ylabel = "Drugs" #hide
+    axdd.xlabel = "Drugs" #hide
+    axdd.ylabel = "Drugs" #hide
+    colsize!(f.layout, 1, Aspect(1, 1.0)) #hide
+    colsize!(f.layout, 2, Aspect(1, 1.0)) #hide
+    return f #hide
+end; #hide
+heatmaps(DT, DD) #hide
 
 # ## Data splitting
 #
-# Next, we will train a model using SimSpread to predict the classes for a
-# subset of plants in the Iris dataset. For this, we will split our dataset
-# in 2 groups: training set, which will correspond to 80% of the data, and
-# testing set, which will correspond to the remaining 20%.
+# Next, we will train a model using SimSpread to predict the targets for a subset of drugs
+# in the dataset. For this, we will split our dataset in 2 groups: training set, which will
+# correspond to 90% of the data, and testing set, which will correspond to the remaining 10%:
+using Random #hide
+Random.seed!(1) #hide
+N = size(DT, 1)
+
+train = rand(N) .< 0.9
+test = .!train
+
+ytrain = DT[train, :]
+ytest = DT[test, :]
+nothing #hide
+
 #
-# For this, will first shuffle the plants and extract the first 20% of the
-# dataset with the following code:
-using Random
 
-Random.seed!(1)
-N = nrow(iris)
-perm = randperm(N)
+println("Training set size: ", size(ytrain)) #hide
+println("Testing set size:  ", size(ytest)) #hide
 
-train_idx = last(perm, Int(0.8 * N))
-test_idx = first(perm, Int(0.2 * N))
+# As seen here, around 90% of the dataset corresponds to training and the remaining to testing
+# sets. From this splitting we will proceed to construct our query network and predict the
+# interactions for the testing set.
 
-Xtrain = iris[train_idx, ["sepallength", "sepalwidth", "petallength", "petalwidth"]]
-Xtest  = iris[test_idx,  ["sepallength", "sepalwidth", "petallength", "petalwidth"]]
-ytrain = iris[train_idx, ["Is Iris-setosa?", "Is Iris-versicolor?", "Is Iris-virginica?"]]
-ytest  = iris[test_idx,  ["Is Iris-setosa?", "Is Iris-versicolor?", "Is Iris-virginica?"]];
-
-# The first 3 entries of the training set have the following features:
-first(Xtrain, 3)
-
-# And the following one-hot encoded classes:
-first(ytrain, 3)
-
-# The first 3 entries of the test set have the following features:
-first(Xtest, 3)
-
-# And the following one-hot encoded classes:
-first(ytest, 3)
-
-# ## Meta-description preparation
+# ## Similarity-based meta-description preparation
 #
-# As we previously mentioned, SimSpread uses a meta-description based in
-# similarity between entities, that is, an abstracted feature set where
-# entities are described by their similarity to other entities. This permits
-# the added flexibility of freely choosing any type of features and similarity
-# measurement to correctly describe the problems entities.
+# SimSpread uses a meta-description constructed from the similarity between source nodes (drugs
+# in the working example). For this, a similarity threshold (denoted with α) is employed to keep
+# links between source nodes that have a weight greater or equal to this threshold. 
 #
-# To generate this meta-description features, the following steps are taken:
-# 1. A similarity matrix $S$ is obtained from the calculation of a similarity metric
-#    between all pairs of feature vectors of the entities on the studied dataset.
-# 2. From $S$ we can construct a similarity-based feature matrix $S^\prime$ by applying
-#    the similarity threshold $\alpha$ using the following equation:
-#    $S^\prime_{ij}={w(i,j) \ \text{if} \ S_{ij} \ge \alpha; \ 0 \ \text{otherwise.}}$
-#    where $S$ corresponds to the entities similarity matrix, $S^\prime$ to the final
-#    feature matrix, $i$ and $j$ to entities in the studied dataset, and $w(i,j)$ the
-#    weighting scheme employed for feature matrix construction, which can be binary,
-#    $w(i,j) = S_{ij} > 0$, or continuous, $w(i,j) = (S_{ij} > 0) \times S_{ij}$.
+# This procedure encodes the question "Is drug _i_ similar to drug _j_?", which is later used by
+# the resource spreading algorithm for link prediction.
+α = 0.35
+Xtrain = featurize(DD[train, train], α, false)
+Xtest = featurize(DD[test, train], α, false)
+nothing #hide
+
+# Let's compare the similarity matrices before and after the featurization procedure:
+# - Training set:
+heatmaps(M::NamedArray, N::NamedArray) = begin #hide
+    f = Figure(resolution=(700, 300)) #hide
+    axold, _  = heatmap(f[1, 1], M.array; colorrange=(0, 1), colormap=:binary) #hide
+    axnew, hmnew = heatmap(f[1, 2], N.array; colorrange=(0, 1), colormap=:binary) #hide
+    Colorbar(f[1, 3], hmnew; label="Similarity") #hide
+    axold.title = "Before" #hide
+    axnew.title = "After" #hide
+    axold.xlabel = "Drugs" #hide
+    axold.ylabel = "Drugs" #hide
+    axnew.xlabel = "Drugs" #hide
+    axnew.ylabel = "Drugs" #hide
+    colsize!(f.layout, 1, Aspect(1, 1.0)) #hide
+    colsize!(f.layout, 2, Aspect(1, 1.0)) #hide
+    return f #hide
+end; #hide
+
+heatmaps(DD[train, train], Xtrain) #hide
+
+# - Testing set:
+heatmaps(DD[test, train], Xtest) #hide
+
+# As seen here, all comparisons with a weight lower than our threshold α are eliminated (i.e.
+# filled with a zero, 0) and a structure arises from this new featurized matrix.
+
+# ## Predicting DTIs with SimSpread
 #
-# This meta-description matrix encodes the question "Is plant _i_ similar to plant
-# _j_?", which is later used by the resource spreading algorithm for link prediction.
-#
-# Here, we will use the Jaccard index as our similarity measure, similarity measurement
-# that is bound between 0 and 1:
-using Distances, NamedArrays
-
-Dtrain = 1 .- pairwise(Jaccard(), Matrix(Xtrain), dims=1)
-Dtest  = 1 .- pairwise(Jaccard(), Matrix(Xtest), Matrix(Xtrain), dims=1)
-
-Dtrain = NamedArray(Dtrain, (["E$i" for i in train_idx], ["E$i" for i in train_idx] ))
-Dtest  = NamedArray(Dtest, (["E$i" for i in test_idx], ["E$i" for i in train_idx] ));
-
-# and will use a cutoff of $J(x,y) = 0.9$, since this will conserve all comparison between
-# highly similar flowers:
-using SimSpread
-
-class_names = ["Is Iris-setosa?", "Is Iris-versicolor?", "Is Iris-virginica?"]
-
-α = 0.9
-Xtrain′ = featurize(Dtrain, α, true)
-Xtest′  = featurize(Dtest, α, true)
-ytrain′ = NamedArray(Matrix{Float64}(ytrain), (["E$i" for i in train_idx], class_names))
-ytest′  = NamedArray(Matrix{Float64}(ytest), (["E$i" for i in test_idx], class_names));
-
-# ## Predicting labels with SimSpread
-#
-# Now that we have all the information necessary for SimSpread, we can construct the query graph
-# that is used to predict links using network-based-inference resource allocation algorithm.
+# Now that we have all the information necessary for SimSpread, we can construct the query
+# graph that is used to predict links using network-based-inference resource allocation
+# algorithm.
 #
 # In first place, we need to construct the query network for label prediction:
-G = construct(ytrain′, ytest′, Xtrain′, Xtest′)
+G = construct(ytrain, ytest, Xtrain, Xtest)
+nothing #hide
 
 # From this, we can predict the labels as follows:
-ŷtrain = predict(G, ytrain′)
-ŷtest = predict(G, ytest′)
+ŷtrain = predict(G, ytrain)
+ŷtest = predict(G, ytest)
+nothing #hide
 
-ŷtest[1:3, :]
+# Finally, we assess the performance of our model using the area under ROC curve, denoted as
+# AuROC:
 
-# As we can see, we predict the probability for each class of flower possible. To
-# evaluate the predictive performance as a multiclass problem, we will assign the
-# label with the highest score as the predicted label.
-# > In the example above, the predicted labels for each row in the matrix would be
-# > "Iris-virginica" (C3), "Iris-setosa" (C1) & "Iris-setosa" (C1).
-# 
-# To convert the problem from single-class to multi-class, we do the following:
-class_mapper = ["Iris-setosa", "Iris-versicolor", "Iris-virginica"]
+println("AuROC training set: ", round(AuROC(Bool.(vec(ytrain)), vec(ŷtrain)); digits=3)) #hide
+println("AuROC testing set:  ", round(AuROC(Bool.(vec(ytest)), vec(ŷtest)); digits=3)) #hide
 
-ŷ = hcat(
-    vcat(test_idx, train_idx),
-    vcat(
-        [class_mapper[cidx] for (_, cidx) in Tuple.(argmax(ŷtest, dims=2))],
-        [class_mapper[cidx] for (_, cidx) in Tuple.(argmax(ŷtrain, dims=2))]
-    )
-)
+# Let's visualize the predictions obtained from our model:
+# - Training set:
+heatmaps(M::NamedArray, N::NamedArray) = begin #hide
+    M′ =  M' #./ maximum(M; dims=2))' #hide
+    N′ =  N' #./ maximum(N; dims=2))' #hide
+    @show maxscore = maximum([maximum(vec(M)), maximum(vec(N))]) #hide
+    f = Figure(resolution=(700, 300)) #hide
+    axold, _ = heatmap(f[1, 1], M′.array; colorrange=(0, maxscore), colormap=:binary) #hide
+    axnew, hmnew = heatmap(f[1, 2], N′.array; colorrange=(0, maxscore), colormap=:binary) #hide
+    Colorbar(f[1, 3], hmnew; label="SimSpread score") #hide
+    axold.title = "Ground-truth" #hide
+    axnew.title = "Predictions" #hide
+    axold.xlabel = "Targets" #hide
+    axold.ylabel = "Drugs" #hide
+    axnew.xlabel = "Targets" #hide
+    axnew.ylabel = "Drugs" #hide
+    colsize!(f.layout, 1, Aspect(1, 1.0)) #hide
+    colsize!(f.layout, 2, Aspect(1, 1.0)) #hide
+    return f #hide
+end; #hide
+heatmaps(ytrain, ŷtrain) #hide
 
-first(ŷ[:, 2], 3)
+# - Testing set:
+heatmaps(ytest, ŷtest) #hide
 
-# Great! Our predicted labels match what we expected. Now let's assess how good is
-# SimSpread in predicting the classes for the iris dataset.
-#
-# ## Assesing the predictive performance of the proposed model
-# In order to have an idea of the predictive performance of the model we constructed, we will use
-# two common metrics in multi-class prediction problems to evaluate the predictions for both the 
-# training and testing sets: 
-#
-# 1. _Accuracy_, that indicates how close a given set of predictions are to their true value, and
-# 2. _Error rate_, that indicates the inverse of accuracy.
-#
-# Let's start with accuracy:
-using AlgebraOfGraphics, CairoMakie
-set_aog_theme!()
-
-df = (
-    train=[Bool(i ∈ train_idx) for i in 1:N],
-    y=iris[!, "class"],
-    yhat=ŷ[sortperm(ŷ[:, 1]), 2]
-)
-
-plt = data(df)
-plt *= expectation()
-plt *= mapping(
-    :y => "Class",
-    (:y, :yhat) => isequal => "Accuracy"
-)
-plt *= mapping(
-    dodge=:train => renamer(true => "Training set", false => "Testing set") => "Dataset",
-    color=:train => renamer(true => "Training set", false => "Testing set") => "Dataset"
-)
-
-draw(plt; axis=(width=400, height=225))
-
-# As we can see, our proposed SimSpread model achieves high accuracy for both training and
-# testing sets. Let's see the error rates for the same grouping:
-plt = data(df)
-plt *= expectation()
-plt *= mapping(
-    :y => "Class",
-    (:y, :yhat) => !isequal => "Error rate"
-)
-plt *= mapping(
-    dodge=:train => renamer(true => "Training set", false => "Testing set") => "Dataset",
-    color=:train => renamer(true => "Training set", false => "Testing set") => "Dataset"
-)
-
-draw(plt; axis=(width=400, height=225))
-
-# Here we also see goo performance, achieving low error rate for all the classes in both the training and 
-# testing sets. We also can appreciate that the the testing set present a higher mean error rate than the
-# training set.
-#
-# Let's visualize where the predicted classes fall in our training and testing sets. First, lets see our
-# ground truth:
-df = (
-    sepallength=iris[!, "sepallength"],
-    petallength=iris[!, "petallength"],
-    y=iris[!, "class"],
-)
-plt = data(df)
-plt *= mapping(
-    :sepallength => "Sepal Length (cm)",
-    :petallength => "Petal Length (cm)",
-    color=:y => "Class"
-)
-draw(plt; axis=(width=300, height=300))
-
-# We can clearly see that _setosa_ plants are completely separated from the rest of
-# the plants in the dataset. _Versicolor_ and _virginica_ present some overlap, which
-# might respond to what we have see in the predictive performance.
-#
-# Let's visualize the prediction over this scatter plot to map where are the incorrect
-# predictions:
-df = (
-    sepallength=iris[!, "sepallength"],
-    petallength=iris[!, "petallength"],
-    train=[Bool(i ∈ train_idx) for i in 1:N],
-    y=iris[!, "class"],
-    yhat=ŷ[sortperm(ŷ[:, 1]), 2]
-)
-
-plt = data(df)
-plt *= mapping(
-    :sepallength => "Sepal Length (cm)",
-    :petallength => "Petal Length (cm)",
-    row=:train => renamer(true => "Training set", false => "Testing set") => "Dataset",
-    col=:y => "Class",
-    color=:yhat => "Predicted class"
-)
-
-draw(plt; axis=(width=225, height=225))
+# This wraps up our tutorial. The following tutorial provided (i) a more in-depth use case of
+# the core utilities of `SimSpread.jl` and (ii) how to optimize a SimSpread model and evaluate its
+# predictions. Adittionally, recipes for common ML tasks are provided in the next sections, specifically,
+# common corss-validation scenarios.

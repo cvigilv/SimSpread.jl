@@ -27,7 +27,7 @@ makedocs(;
     pages=[
         "Welcome to SimSpread.jl" => "index.md",
         "Tutorials" => [
-            "Getting started" => "tutorial/getting-started-v3.md",
+            "Getting started" => "tutorial/getting-started.md",
             # "Fisher's flowers" => "tutorial/fishers-flowers.md",
             # "Optimizing SimSpread" => "tutorial/optimizing-simspread.md",
         ],
