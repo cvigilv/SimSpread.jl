@@ -34,10 +34,10 @@ AuROC
 ```
 
 ### Early recognition performance
-Due to the roots of SimSpread (target prediction in drug discovery), we incude evaluation
+Due to the roots of SimSpread (target prediction in drug discovery), we include evaluation
 metrics that aim to assess predictive performance of the best predictions obtained from a model.
 
-In virtual screening, only the best predictions obtained from a model are selected for 
+In virtual screening, only the best predictions obtained from a model are selected for
 posterior experimental validation. Therefore, understanding the predictive performance of a
 model for these predictions is essential to (1) make accurate predictions that will translate
 to biological activity and (2) understand the limitations of the model. The metrics discussed
@@ -79,4 +79,5 @@ validity_ratio
 ```@docs
 read_namedmatrix
 k
+getyamanishi
 ```

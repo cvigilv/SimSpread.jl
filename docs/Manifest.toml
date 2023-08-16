@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.0"
+julia_version = "1.9.2"
 manifest_format = "2.0"
 project_hash = "18291c3e7924043b762814c916547796f603c7f8"
 
@@ -284,7 +284,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.2+0"
+version = "1.0.5+0"
 
 [[deps.CompositionsBase]]
 git-tree-sha1 = "802bb88cd69dfd1509f6670416bd4434015693ad"
@@ -1282,7 +1282,7 @@ version = "0.40.1+0"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.9.0"
+version = "1.9.2"
 
 [[deps.PkgVersion]]
 deps = ["Pkg"]
@@ -1492,10 +1492,10 @@ uuid = "73760f76-fbc4-59ce-8f25-708e95d2df96"
 version = "0.4.0"
 
 [[deps.SimSpread]]
-deps = ["CUDA", "DelimitedFiles", "MLBase", "NamedArrays", "Random", "StatsBase", "Test", "Trapz"]
-git-tree-sha1 = "4fc7da2a5eeed75aadf315d3188c6c0ea603773f"
+deps = ["CUDA", "DelimitedFiles", "Downloads", "MLBase", "NamedArrays", "Random", "StatsBase", "Test", "Trapz"]
+git-tree-sha1 = "c733345f4b3bc5bc5cec22d58eba9fed99993b1c"
 repo-rev = "develop"
-repo-url = "https://github.com/cvigilv/SimSpread.jl.git"
+repo-url = "/home/carlos/git/SimSpread.jl"
 uuid = "afa5cc60-bf5a-45b9-aa6c-27158a106b2a"
 version = "0.1.0"
 
@@ -1855,7 +1855,7 @@ version = "0.15.1+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.7.0+0"
+version = "5.8.0+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]

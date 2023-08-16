@@ -2,15 +2,22 @@
 #
 # TODO: Small introdution to SimSpread, its origins and use cases
 #
-# ## Preparing our environment
+# SimSpread consist of N main steps:
+# 1. 
+# 2. 
+# 3. Construction of a metadescription-object-target network
+# 4. Resource-spreading algorithm to predict the probability an edge between a
+#    object and target interact.
 #
-# For this short and concise tutorial, we will use as an example the classic
-# "Iris" dataset proposed by R.A. Fisher, in a classification problem. Let's
-# go ahead and load the dataset:
+# ## Preparing our problem
+#
+# For this introductory tutorial, we will use as an example the classic "Iris"
+# dataset proposed by R.A. Fisher, in a classification problem. Let's go ahead
+# and load the dataset:
 using MLDatasets, DataFrames
 
 iris = Iris().dataframe
-first(iris, 5)
+first(iris, 3)
 
 # Since we will use SimSpread as a classification algorithm for a single-class
 # problem, we need to convert the `class` column into 3 distinct columns
@@ -22,7 +29,7 @@ transform!(
     :class => ByRow(c -> c .== "Iris-versicolor") => "Is Iris-versicolor?",
     :class => ByRow(c -> c .== "Iris-virginica") => "Is Iris-virginica?",
 )
-first(iris, 5)
+first(iris, 3)
 
 # and obtain 3 columns that encode the class for each plant.
 
@@ -49,39 +56,43 @@ Xtest  = iris[test_idx,  ["sepallength", "sepalwidth", "petallength", "petalwidt
 ytrain = iris[train_idx, ["Is Iris-setosa?", "Is Iris-versicolor?", "Is Iris-virginica?"]]
 ytest  = iris[test_idx,  ["Is Iris-setosa?", "Is Iris-versicolor?", "Is Iris-virginica?"]];
 
-# The first 5 entries of the training set have the following features:
-first(Xtrain, 5)
+# The first 3 entries of the training set have the following features:
+first(Xtrain, 3)
 
 # And the following one-hot encoded classes:
-first(ytrain, 5)
+first(ytrain, 3)
 
-# The first 5 entries of the test set have the following features:
-first(Xtest, 5)
+# The first 3 entries of the test set have the following features:
+first(Xtest, 3)
 
 # And the following one-hot encoded classes:
-first(ytest, 5)
+first(ytest, 3)
 
 # ## Meta-description preparation
 #
-# SimSpread works using a meta-description based out of similarity between
-# objects (in this tutorial, plants). For this, we first need to compute how
-# similar plants in the training set are (all-vs-all comparison) and how similar
-# are the plants in the testing set to the training set.
+# As we previously mentioned, SimSpread uses a meta-description based in
+# similarity between entities, that is, an abstracted feature set where
+# entities are described by their similarity to other entities. This permits
+# the added flexibility of freely choosing any type of features and similarity
+# measurement to correctly describe the problems entities.
 #
-# Once that is computed, we construct the meta-description using a similarity
-# threshold that creates a new matrix that encodes the question "Is plant _A_ similar
-# to plant _B_?". 
+# To generate this meta-description features, the following steps are taken:
+# 1. A similarity matrix $S$ is obtained from the calculation of a similarity metric
+#    between all pairs of feature vectors of the entities on the studied dataset.
+# 2. From $S$ we can construct a similarity-based feature matrix $S^\prime$ by applying
+#    the similarity threshold $\alpha$ using the following equation:
+#    $S^\prime_{ij}={w(i,j) \ \text{if} \ S_{ij} \ge \alpha; \ 0 \ \text{otherwise.}}$
+#    where $S$ corresponds to the entities similarity matrix, $S^\prime$ to the final
+#    feature matrix, $i$ and $j$ to entities in the studied dataset, and $w(i,j)$ the
+#    weighting scheme employed for feature matrix construction, which can be binary,
+#    $w(i,j) = S_{ij} > 0$, or continuous, $w(i,j) = (S_{ij} > 0) \times S_{ij}$.
 #
-# 3. Weight the transformed similarity matrix using a binary, $s^\prime_{i,j} = s_{i,j} > 0$,
-#    or continuous, $s^\prime_{i,j} = (s_{i,j} > 0) \times s_{i,j}$, transformation.
+# This meta-description matrix encodes the question "Is plant _i_ similar to plant
+# _j_?", which is later used by the resource spreading algorithm for link prediction.
 #
-# The resulting matrix corresponds to the new feature matrix, corresponding to a meta
-# -description of the source nodes based in its similarity to the other nodes and itself.
-#
-# For the example, we will use the Jaccard index as our similarity measure, since its bound
-# between 0 and 1:
+# Here, we will use the Jaccard index as our similarity measure, similarity measurement
+# that is bound between 0 and 1:
 using Distances, NamedArrays
-
 
 Dtrain = 1 .- pairwise(Jaccard(), Matrix(Xtrain), dims=1)
 Dtest  = 1 .- pairwise(Jaccard(), Matrix(Xtest), Matrix(Xtrain), dims=1)
@@ -89,8 +100,8 @@ Dtest  = 1 .- pairwise(Jaccard(), Matrix(Xtest), Matrix(Xtrain), dims=1)
 Dtrain = NamedArray(Dtrain, (["E$i" for i in train_idx], ["E$i" for i in train_idx] ))
 Dtest  = NamedArray(Dtest, (["E$i" for i in test_idx], ["E$i" for i in train_idx] ));
 
-# and will use a cutoff of $J(x,y) = 0.9$, since this generally represent comparison between
-# two highly similar entities:
+# and will use a cutoff of $J(x,y) = 0.9$, since this will conserve all comparison between
+# highly similar flowers:
 using SimSpread
 
 class_names = ["Is Iris-setosa?", "Is Iris-versicolor?", "Is Iris-virginica?"]
@@ -147,6 +158,7 @@ first(ŷ[:, 2], 3)
 #
 # Let's start with accuracy:
 using AlgebraOfGraphics, CairoMakie
+set_aog_theme!()
 
 df = (
     train=[Bool(i ∈ train_idx) for i in 1:N],
