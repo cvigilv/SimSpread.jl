@@ -12,18 +12,33 @@
 # similarity matrix for the 'Nuclear Receptor' dataset. The package provides a helper for
 # easy download and preparation for this group of datasets (refer to `??getyamanishi`
 # for more information).
+using CairoMakie #hide
+using NamedArrays # hide
+CairoMakie.activate!() # hide
 using SimSpread
 
 DT, DD = getyamanishi("nr")
 nothing #hide
 
-#
-
-DT[1:3, :]
-
-#
-
-DD[1:3, 1:3]
+# Let's visualize our data as heatmaps:
+heatmaps(M::NamedArray, N::NamedArray) = begin #hide
+    M′ =  M' #hide
+    N′ =  N' #hide
+    f = Figure(resolution=(700, 300)) #hide
+    axdt, _ = heatmap(f[1, 1], M′.array; colorrange=(0, 1), colormap=:binary) #hide
+    axdd, hmdd = heatmap(f[1, 2], N′.array; colorrange=(0, 1), colormap=:binary) #hide
+    Colorbar(f[1, 3], hmdd; label="SIMCOMP similarity") #hide
+    axdt.title = "Drug-Target\ninteractions" #hide
+    axdd.title = "Drug-Drug\nsimilarity" #hide
+    axdt.xlabel = "Targets" #hide
+    axdt.ylabel = "Drugs" #hide
+    axdd.xlabel = "Drugs" #hide
+    axdd.ylabel = "Drugs" #hide
+    colsize!(f.layout, 1, Aspect(1, 1.0)) #hide
+    colsize!(f.layout, 2, Aspect(1, 1.0)) #hide
+    return f #hide
+end; #hide
+heatmaps(DT, DD) #hide
 
 # ## Data splitting
 #
@@ -64,23 +79,27 @@ Xtest = featurize(DD[test, train], α, false)
 nothing #hide
 
 # Let's compare the similarity matrices before and after the featurization procedure:
-
-using CairoMakie #hide
-using NamedArrays # hide
-CairoMakie.activate!() # hide
+# - Training set:
 heatmaps(M::NamedArray, N::NamedArray) = begin #hide
     f = Figure(resolution=(700, 300)) #hide
-    axold, hmold = heatmap(f[1, 1], M.array; colorrange=(0, 1), colormap=:Blues) #hide
-    axnew, hmnew = heatmap(f[1, 2], N.array; colorrange=(0, 1), colormap=:Blues) #hide
+    axold, _  = heatmap(f[1, 1], M.array; colorrange=(0, 1), colormap=:binary) #hide
+    axnew, hmnew = heatmap(f[1, 2], N.array; colorrange=(0, 1), colormap=:binary) #hide
     Colorbar(f[1, 3], hmnew; label="Similarity") #hide
     axold.title = "Before" #hide
     axnew.title = "After" #hide
+    axold.xlabel = "Drugs" #hide
+    axold.ylabel = "Drugs" #hide
+    axnew.xlabel = "Drugs" #hide
+    axnew.ylabel = "Drugs" #hide
     colsize!(f.layout, 1, Aspect(1, 1.0)) #hide
     colsize!(f.layout, 2, Aspect(1, 1.0)) #hide
     return f #hide
 end; #hide
 
-heatmaps(DD[train, train], Xtrain)
+heatmaps(DD[train, train], Xtrain) #hide
+
+# - Testing set:
+heatmaps(DD[test, train], Xtest) #hide
 
 # As seen here, all comparisons with a weight lower than our threshold α are eliminated (i.e.
 # filled with a zero, 0) and a structure arises from this new featurized matrix.
@@ -106,14 +125,15 @@ nothing #hide
 println("AuROC training set: ", round(AuROC(Bool.(vec(ytrain)), vec(ŷtrain)); digits=3)) #hide
 println("AuROC testing set:  ", round(AuROC(Bool.(vec(ytest)), vec(ŷtest)); digits=3)) #hide
 
-#
+# Let's visualize the predictions obtained from our model:
+# - Training set:
 heatmaps(M::NamedArray, N::NamedArray) = begin #hide
-    M′ =  M #./ maximum(M; dims=2))' #hide
-    N′ =  N #./ maximum(N; dims=2))' #hide
+    M′ =  M' #./ maximum(M; dims=2))' #hide
+    N′ =  N' #./ maximum(N; dims=2))' #hide
     @show maxscore = maximum([maximum(vec(M)), maximum(vec(N))]) #hide
     f = Figure(resolution=(700, 300)) #hide
-    axold, hmold = heatmap(f[1, 1], M′.array; colorrange=(0, maxscore), colormap=:Spectral) #hide
-    axnew, hmnew = heatmap(f[1, 2], N′.array; colorrange=(0, maxscore), colormap=:Spectral) #hide
+    axold, _ = heatmap(f[1, 1], M′.array; colorrange=(0, maxscore), colormap=:binary) #hide
+    axnew, hmnew = heatmap(f[1, 2], N′.array; colorrange=(0, maxscore), colormap=:binary) #hide
     Colorbar(f[1, 3], hmnew; label="SimSpread score") #hide
     axold.title = "Ground-truth" #hide
     axnew.title = "Predictions" #hide
@@ -125,8 +145,12 @@ heatmaps(M::NamedArray, N::NamedArray) = begin #hide
     colsize!(f.layout, 2, Aspect(1, 1.0)) #hide
     return f #hide
 end; #hide
-heatmaps(ytrain, ŷtrain)
+heatmaps(ytrain, ŷtrain) #hide
 
-#
+# - Testing set:
+heatmaps(ytest, ŷtest) #hide
 
-heatmaps(ytest, ŷtest)
+# This wraps up our tutorial. The following tutorial provided (i) a more in-depth use case of
+# the core utilities of `SimSpread.jl` and (ii) how to optimize a SimSpread model and evaluate its
+# predictions. Adittionally, recipes for common ML tasks are provided in the next sections, specifically,
+# common corss-validation scenarios.
