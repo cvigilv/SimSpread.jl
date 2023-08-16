@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Getting started with SimSpread.jl · SimSpread.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://cvigilv.github.io/SimSpread.jl/tutorial/getting-started-v2/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="SimSpread.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">SimSpread.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Welcome to SimSpread.jl</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../getting-started-v3/">Getting started</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Getting started with SimSpread.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Getting started with SimSpread.jl</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/cvigilv/SimSpread.jl/blob/main/docs/src/tutorial/getting-started-v2.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Getting-started-with-SimSpread.jl"><a class="docs-heading-anchor" href="#Getting-started-with-SimSpread.jl">Getting started with SimSpread.jl</a><a id="Getting-started-with-SimSpread.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Getting-started-with-SimSpread.jl" title="Permalink"></a></h1><p>SimSpread is a novel approach for predicting interactions between two distinct set of nodes, query and target nodes, using a similarity measure vector between query nodes as a meta-description in combination with the network-based inference for link prediction.</p><p>In this tutorial, we will skim through the basic workflow for using <code>SimSpread.jl</code> using as an example a classic classification problem: R.A. Fisher iris dataset.</p><h2 id="Preparing-our-problem"><a class="docs-heading-anchor" href="#Preparing-our-problem">Preparing our problem</a><a id="Preparing-our-problem-1"></a><a class="docs-heading-anchor-permalink" href="#Preparing-our-problem" title="Permalink"></a></h2><p>For this introductory tutorial, we will use as an example the classic &quot;Iris&quot; dataset proposed by R.A. Fisher, in a classification problem. Let&#39;s go ahead and load the dataset:</p><pre><code class="language-julia hljs">using DelimitedFiles
+using NamedArrays
+using SimSpread
+
+y = read_namedmatrix(&quot;data/iris.classes&quot;)
+S = read_namedmatrix(&quot;data/iris.simmat&quot;)
+
+y[1:5, :]
+S[1:5, 1:5]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">5×5 Named Matrix{Float64}
+A ╲ B │        1        10       100       101       102
+──────┼─────────────────────────────────────────────────
+1     │      1.0   0.92233  0.650685  0.546448  0.576687
+10    │  0.92233       1.0   0.65493  0.530387  0.578616
+100   │ 0.650685   0.65493       1.0  0.767956  0.884615
+101   │ 0.546448  0.530387  0.767956       1.0  0.856354
+102   │ 0.576687  0.578616  0.884615  0.856354       1.0</code></pre><p>As you may appreciate, classes are one-hot encoded and similarity between flowers is bound between 0 and 1 (more on both later).</p><h2 id="Data-splitting"><a class="docs-heading-anchor" href="#Data-splitting">Data splitting</a><a id="Data-splitting-1"></a><a class="docs-heading-anchor-permalink" href="#Data-splitting" title="Permalink"></a></h2><p>Next, we will train a model using SimSpread to predict the classes for a subset of plants in the Iris dataset. For this, we will split our dataset in 2 groups: training set, which will correspond to 80% of the data, and testing set, which will correspond to the remaining 20%.</p><p>For this, will first shuffle the plants and extract the first 20% of the dataset with the following code:</p><pre><code class="language-julia hljs">using Random
+
+Random.seed!(1)
+N = size(y,1)
+perm = randperm(N)
+
+train_idx = last(perm, Int(0.9 * N))
+test_idx = first(perm, Int(0.1 * N))
+
+Strain = S[train_idx, train_idx]
+Stest  = S[test_idx,  train_idx]
+ytrain = y[train_idx, :]
+ytest  = y[test_idx,  :]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">15×3 Named Matrix{Float64}
+A ╲ B │     setosa  versicolor   virginica
+──────┼───────────────────────────────────
+83    │        0.0         1.0         0.0
+100   │        0.0         1.0         0.0
+137   │        0.0         0.0         1.0
+144   │        0.0         0.0         1.0
+96    │        0.0         1.0         0.0
+134   │        0.0         0.0         1.0
+64    │        0.0         1.0         0.0
+8     │        1.0         0.0         0.0
+82    │        0.0         1.0         0.0
+75    │        0.0         1.0         0.0
+97    │        0.0         1.0         0.0
+43    │        1.0         0.0         0.0
+27    │        1.0         0.0         0.0
+59    │        0.0         1.0         0.0
+11    │        1.0         0.0         0.0</code></pre><h2 id="Meta-description-preparation"><a class="docs-heading-anchor" href="#Meta-description-preparation">Meta-description preparation</a><a id="Meta-description-preparation-1"></a><a class="docs-heading-anchor-permalink" href="#Meta-description-preparation" title="Permalink"></a></h2><p>As we previously mentioned, SimSpread uses an abstracted feature set where entities are described by their similarity to other entities. This permits the added flexibility of freely choosing any type of features and similarity measurement to correctly describe the problems entities.</p><p>To generate this meta-description features, the following steps are taken:</p><ol><li>A similarity matrix <span>$S$</span> is obtained from the calculation of a similarity metric between</li></ol><p>all pairs of feature vectors of the entities on the studied dataset.</p><ol><li>From <span>$S$</span> we can construct a similarity-based feature matrix <span>$S^\prime$</span> by applying the</li></ol><p>similarity threshold <span>$\alpha$</span> using the following equation:    <span>$S^\prime_{ij}={w(i,j) \ \text{if} \ S_{ij} \ge \alpha; \ 0 \ \text{otherwise.}}$</span> where    <span>$S$</span> corresponds to the entities similarity matrix, <span>$S^\prime$</span> to the final feature    matrix, <span>$i$</span> and <span>$j$</span> to entities in the studied dataset, and <span>$w(i,j)$</span> the weighting    scheme employed for feature matrix construction, which can be binary,    <span>$w(i,j) = S_{ij} &gt; 0$</span>, or continuous, <span>$w(i,j) = (S_{ij} &gt; 0) \times S_{ij}$</span>.</p><p>This meta-description matrix encodes the question &quot;Is plant <em>i</em> similar to plant <em>j</em>?&quot;, which is later used by the resource spreading algorithm for link prediction.</p><p>Here, we will use the Jaccard index as our similarity measure, similarity measurement that is bound between 0 and 1, and will use a cutoff of <span>$J(x,y) = 0.9$</span>, since this will conserve all comparison between highly similar flowers:</p><pre><code class="language-julia hljs">α = 0.9
+Xtrain = featurize(Strain, α, true)
+Xtest  = featurize(Stest, α, true)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">15×135 Named Matrix{Float64}
+A ╲ B │     f130       f94       f55  …      f138       f48      f112
+──────┼──────────────────────────────────────────────────────────────
+83    │      0.0       0.0       0.0  …       0.0       0.0       0.0
+100   │      0.0       0.0  0.902597          0.0       0.0       0.0
+137   │      0.0       0.0       0.0     0.938202       0.0  0.910112
+144   │ 0.924731       0.0       0.0     0.923077       0.0       0.0
+96    │      0.0       0.0       0.0          0.0       0.0       0.0
+134   │      0.0       0.0  0.955975     0.934524       0.0   0.95122
+64    │      0.0       0.0  0.955128          0.0       0.0   0.90303
+8     │      0.0       0.0       0.0          0.0  0.930693       0.0
+82    │      0.0  0.920635       0.0          0.0       0.0       0.0
+75    │      0.0       0.0  0.954839          0.0       0.0       0.0
+97    │      0.0       0.0  0.903226          0.0       0.0       0.0
+43    │      0.0       0.0       0.0          0.0  0.968085       0.0
+27    │      0.0       0.0       0.0          0.0  0.903846       0.0
+59    │      0.0       0.0  0.974359          0.0       0.0       0.0
+11    │      0.0       0.0       0.0  …       0.0       0.0       0.0</code></pre><h2 id="Predicting-labels-with-SimSpread"><a class="docs-heading-anchor" href="#Predicting-labels-with-SimSpread">Predicting labels with SimSpread</a><a id="Predicting-labels-with-SimSpread-1"></a><a class="docs-heading-anchor-permalink" href="#Predicting-labels-with-SimSpread" title="Permalink"></a></h2><p>Now that we have all the information necessary for SimSpread, we can construct the query graph that is used to predict links using network-based-inference resource allocation algorithm.</p><p>In first place, we need to construct the query network for label prediction:</p><pre><code class="language- hljs">G = construct(ytrain′, ytest′, Xtrain′, Xtest′)</code></pre><p>From this, we can predict the labels as follows:</p><pre><code class="language- hljs">ŷtrain = predict(G, ytrain′)
+ŷtest = predict(G, ytest′)
+
+ŷtest[1:3, :]</code></pre><p>As we can see, we predict the probability for each class of flower possible. To evaluate the predictive performance as a multiclass problem, we will assign the label with the highest score as the predicted label.</p><blockquote><p>In the example above, the predicted labels for each row in the matrix would be &quot;Iris-virginica&quot; (C3), &quot;Iris-setosa&quot; (C1) &amp; &quot;Iris-setosa&quot; (C1).</p></blockquote><p>To convert the problem from single-class to multi-class, we do the following:</p><pre><code class="language- hljs">class_mapper = [&quot;Iris-setosa&quot;, &quot;Iris-versicolor&quot;, &quot;Iris-virginica&quot;]
+
+ŷ = hcat(
+    vcat(test_idx, train_idx),
+    vcat(
+        [class_mapper[cidx] for (_, cidx) in Tuple.(argmax(ŷtest, dims=2))],
+        [class_mapper[cidx] for (_, cidx) in Tuple.(argmax(ŷtrain, dims=2))]
+    )
+)
+
+first(ŷ[:, 2], 3)</code></pre><p>Great! Our predicted labels match what we expected. Now let&#39;s assess how good is SimSpread in predicting the classes for the iris dataset.</p><h2 id="Assesing-the-predictive-performance-of-the-proposed-model"><a class="docs-heading-anchor" href="#Assesing-the-predictive-performance-of-the-proposed-model">Assesing the predictive performance of the proposed model</a><a id="Assesing-the-predictive-performance-of-the-proposed-model-1"></a><a class="docs-heading-anchor-permalink" href="#Assesing-the-predictive-performance-of-the-proposed-model" title="Permalink"></a></h2><p>In order to have an idea of the predictive performance of the model we constructed, we will use two common metrics in multi-class prediction problems to evaluate the predictions for both the training and testing sets:</p><ol><li><em>Accuracy</em>, that indicates how close a given set of predictions are to their true</li></ol><p>value, and 2. <em>Error rate</em>, that indicates the inverse of accuracy.</p><p>Let&#39;s start with accuracy:</p><pre><code class="language- hljs">using AlgebraOfGraphics, CairoMakie
+set_aog_theme!()
+
+df = (
+    train=[Bool(i ∈ train_idx) for i in 1:N],
+    y=iris[!, &quot;class&quot;],
+    yhat=ŷ[sortperm(ŷ[:, 1]), 2]
+)
+
+plt = data(df)
+plt *= expectation()
+plt *= mapping(
+    :y =&gt; &quot;Class&quot;,
+    (:y, :yhat) =&gt; isequal =&gt; &quot;Accuracy&quot;
+)
+plt *= mapping(
+    dodge=:train =&gt; renamer(true =&gt; &quot;Training set&quot;, false =&gt; &quot;Testing set&quot;) =&gt; &quot;Dataset&quot;,
+    color=:train =&gt; renamer(true =&gt; &quot;Training set&quot;, false =&gt; &quot;Testing set&quot;) =&gt; &quot;Dataset&quot;
+)
+
+draw(plt; axis=(width=400, height=225))</code></pre><p>As we can see, our proposed SimSpread model achieves high accuracy for both training and testing sets. Let&#39;s see the error rates for the same grouping:</p><pre><code class="language- hljs">plt = data(df)
+plt *= expectation()
+plt *= mapping(
+    :y =&gt; &quot;Class&quot;,
+    (:y, :yhat) =&gt; !isequal =&gt; &quot;Error rate&quot;
+)
+plt *= mapping(
+    dodge=:train =&gt; renamer(true =&gt; &quot;Training set&quot;, false =&gt; &quot;Testing set&quot;) =&gt; &quot;Dataset&quot;,
+    color=:train =&gt; renamer(true =&gt; &quot;Training set&quot;, false =&gt; &quot;Testing set&quot;) =&gt; &quot;Dataset&quot;
+)
+
+draw(plt; axis=(width=400, height=225))</code></pre><p>Here we also see goo performance, achieving low error rate for all the classes in both the training and testing sets. We also can appreciate that the the testing set present a higher mean error rate than the training set.</p><p>Let&#39;s visualize where the predicted classes fall in our training and testing sets. First, lets see our ground truth:</p><pre><code class="language- hljs">df = (
+    sepallength=iris[!, &quot;sepallength&quot;],
+    petallength=iris[!, &quot;petallength&quot;],
+    y=iris[!, &quot;class&quot;],
+)
+plt = data(df)
+plt *= mapping(
+    :sepallength =&gt; &quot;Sepal Length (cm)&quot;,
+    :petallength =&gt; &quot;Petal Length (cm)&quot;,
+    color=:y =&gt; &quot;Class&quot;
+)
+draw(plt; axis=(width=300, height=300))</code></pre><p>We can clearly see that <em>setosa</em> plants are completely separated from the rest of the plants in the dataset. <em>Versicolor</em> and <em>virginica</em> present some overlap, which might respond to what we have see in the predictive performance.</p><p>Let&#39;s visualize the prediction over this scatter plot to map where are the incorrect predictions:</p><pre><code class="language- hljs">df = (
+    sepallength=iris[!, &quot;sepallength&quot;],
+    petallength=iris[!, &quot;petallength&quot;],
+    train=[Bool(i ∈ train_idx) for i in 1:N],
+    y=iris[!, &quot;class&quot;],
+    yhat=ŷ[sortperm(ŷ[:, 1]), 2]
+)
+
+plt = data(df)
+plt *= mapping(
+    :sepallength =&gt; &quot;Sepal Length (cm)&quot;,
+    :petallength =&gt; &quot;Petal Length (cm)&quot;,
+    row=:train =&gt; renamer(true =&gt; &quot;Training set&quot;, false =&gt; &quot;Testing set&quot;) =&gt; &quot;Dataset&quot;,
+    col=:y =&gt; &quot;Class&quot;,
+    color=:yhat =&gt; &quot;Predicted class&quot;
+)
+
+draw(plt; axis=(width=225, height=225))</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Wednesday 16 August 2023 02:56">Wednesday 16 August 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
