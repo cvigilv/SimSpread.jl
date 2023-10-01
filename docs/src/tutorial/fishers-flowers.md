@@ -1,59 +1,55 @@
 ```@meta
-EditURL = "<unknown>/src/tutorial/getting-started-v2.jl"
+EditURL = "<unknown>/src/tutorial/fishers-flowers.jl"
 ```
 
-# Getting started with SimSpread.jl
-SimSpread is a novel approach for predicting interactions between two distinct set of
-nodes, query and target nodes, using a similarity measure vector between query nodes as
-a meta-description in combination with the network-based inference for link prediction.
+# Fisher's flowers
 
-In this tutorial, we will skim through the basic workflow for using `SimSpread.jl` using
-as an example a classic classification problem: R.A. Fisher iris dataset.
+In this tutorial, we will go through step by step in a more in depth workflow for using
+`SimSpread.jl` having as example the classic classification problem of R.A. Fisher iris
+dataset.
 
-## Preparing our problem
+Let's go ahead and load the dataset we will work with, that is, the flower classes and
+features:
 
-For this introductory tutorial, we will use as an example the classic "Iris" dataset
-proposed by R.A. Fisher, in a classification problem. Let's go ahead and load the dataset:
-
-````@example getting-started-v2
-using DelimitedFiles
-using NamedArrays
+````@example fishers-flowers
+using NamedArrays #hide
 using SimSpread
 
 y = read_namedmatrix("data/iris.classes")
-S = read_namedmatrix("data/iris.simmat")
-
-y[1:5, :]
-S[1:5, 1:5]
+X = read_namedmatrix("data/iris.features")
+setdimnames!(y, ["Flower", "Class"]) #hide
+setdimnames!(X, ["Flower", "Feature"]) #hide
+nothing #hide
 ````
 
-As you may appreciate, classes are one-hot encoded and similarity between flowers is bound
-between 0 and 1 (more on both later).
+Classes are one-hot encoded due to how SimSpread works:
 
-## Data splitting
+````@example fishers-flowers
+y[1:5, :]
+````
+
+And features can be of any type (e.g., continuous floats describing the plants):
+
+````@example fishers-flowers
+X[1:5, :]
+````
 
 Next, we will train a model using SimSpread to predict the classes for a subset of plants
-in the Iris dataset. For this, we will split our dataset
-in 2 groups: training set, which will correspond to 80% of the data, and
-testing set, which will correspond to the remaining 20%.
+in the Iris dataset. For this, we will split our dataset in 2 groups: training set, which
+will correspond to 90% of the data, and testing set, which will correspond to the remaining
+10%:
 
-For this, will first shuffle the plants and extract the first 20% of the
-dataset with the following code:
+````@example fishers-flowers
+using Random #hide
+Random.seed!(1) #hide
+nflowers = size(y, 1)
 
-````@example getting-started-v2
-using Random
+train = rand(nflowers) .< 0.9
+test = .!train
 
-Random.seed!(1)
-N = size(y,1)
-perm = randperm(N)
-
-train_idx = last(perm, Int(0.9 * N))
-test_idx = first(perm, Int(0.1 * N))
-
-Strain = S[train_idx, train_idx]
-Stest  = S[test_idx,  train_idx]
-ytrain = y[train_idx, :]
-ytest  = y[test_idx,  :]
+ytrain = y[train, :]
+ytest = y[test, :]
+nothing#hide
 ````
 
 ## Meta-description preparation
@@ -65,9 +61,9 @@ the problems entities.
 
 To generate this meta-description features, the following steps are taken:
 1. A similarity matrix $S$ is obtained from the calculation of a similarity metric between
-all pairs of feature vectors of the entities on the studied dataset.
+   all pairs of feature vectors of the entities on the studied dataset:
 2. From $S$ we can construct a similarity-based feature matrix $S^\prime$ by applying the
-similarity threshold $\alpha$ using the following equation:
+   similarity threshold $\alpha$ using the following equation:
    $S^\prime_{ij}={w(i,j) \ \text{if} \ S_{ij} \ge \alpha; \ 0 \ \text{otherwise.}}$ where
    $S$ corresponds to the entities similarity matrix, $S^\prime$ to the final feature
    matrix, $i$ and $j$ to entities in the studied dataset, and $w(i,j)$ the weighting
@@ -81,10 +77,57 @@ Here, we will use the Jaccard index as our similarity measure, similarity measur
 is bound between 0 and 1, and will use a cutoff of $J(x,y) = 0.9$, since this will conserve
 all comparison between highly similar flowers:
 
-````@example getting-started-v2
+````@example fishers-flowers
+using CairoMakie#hide
+using Distances, NamedArrays
+
+S = NamedArray(1 .- pairwise(Jaccard(), X, dims=1))
+f = Figure(resolution=(600, 500)) #hide
+axdd, hmdd = heatmap(f[1, 1], S.array'; colorrange=(0, 1), colormap=:binary) #hide
+Colorbar(f[1, 2], hmdd; label="Jaccard similarity") #hide
+axdd.title = "Flower similarity" #hide
+axdd.xlabel = "Flower" #hide
+axdd.ylabel = "Flower" #hide
+colsize!(f.layout, 1, Aspect(1, 1.0)) #hide
+f#hide
+````
+
+From this similarity matrix, we will prepare our meta-description for both training and
+testing sets:
+
+````@example fishers-flowers
+heatmaps(M::NamedArray, N::NamedArray) = begin #hide
+    f = Figure(resolution=(700, 300)) #hide
+    axold, _ = heatmap(f[1, 1], M.array'; colorrange=(0, 1), colormap=:binary) #hide
+    axnew, hmnew = heatmap(f[1, 2], N.array'; colorrange=(0, 1), colormap=:binary) #hide
+    Colorbar(f[1, 3], hmnew; label="Jaccard Similarity") #hide
+    axold.title = "Before" #hide
+    axnew.title = "After" #hide
+    axold.xlabel = "Flowers" #hide
+    axold.ylabel = "Flowers" #hide
+    axnew.xlabel = "Flowers" #hide
+    axnew.ylabel = "Flowers" #hide
+    colsize!(f.layout, 1, Aspect(1, 1.0)) #hide
+    colsize!(f.layout, 2, Aspect(1, 1.0)) #hide
+    return f #hide
+end; #hide
+
 α = 0.9
-Xtrain = featurize(Strain, α, true)
-Xtest  = featurize(Stest, α, true)
+Xtrain = featurize(S[train, train], α, true)
+Xtest = featurize(S[test, train], α, true)
+nothing #hide
+````
+
+- Training set meta-description matrix:
+
+````@example fishers-flowers
+heatmaps(S[train, train], Xtrain) #hide
+````
+
+- Testing set meta-description matrix:
+
+````@example fishers-flowers
+heatmaps(S[test, train], Xtest) #hide
 ````
 
 ## Predicting labels with SimSpread
@@ -95,17 +138,64 @@ algorithm.
 
 In first place, we need to construct the query network for label prediction:
 
-````@example getting-started-v2
-G = construct(ytrain′, ytest′, Xtrain′, Xtest′)
+````@example fishers-flowers
+G = construct(ytrain, ytest, Xtrain, Xtest)
+nothing#hide
 ````
 
 From this, we can predict the labels as follows:
 
-````@example getting-started-v2
-ŷtrain = predict(G, ytrain′)
-ŷtest = predict(G, ytest′)
+````@example fishers-flowers
+ŷtrain = predict(G, ytrain)
+ŷtest = predict(G, ytest)
+nothing #hide
+````
 
-ŷtest[1:3, :]
+Let's visualize the predictions obtained from our model:
+
+````@example fishers-flowers
+heatmaps(M::NamedArray, N::NamedArray) = begin #hide
+    M′ = M' #./ maximum(M; dims=2))' #hide
+    N′ = N' #./ maximum(N; dims=2))' #hide
+    @show maxscore = maximum([maximum(vec(M)), maximum(vec(N))]) #hide
+    f = Figure(resolution=(700, 300)) #hide
+    axold = Axis(#hide
+        f[1, 1],#hide
+        title="Ground-truth", #hide
+        xlabel="Class", #hide
+        ylabel="Flowers", #hide
+        xticks=(1:3, names(y, 2)), #hide
+        xticklabelrotation=π / 4, #hide
+    )
+    axnew = Axis(
+        f[1, 2],
+        title="Predictions",
+        xlabel="Class",
+        ylabel="Flowers",
+        xticks=(1:3, names(y, 2)), #hide
+        xticklabelrotation=π / 4 #hide
+    )
+    heatmap!(axold, M′.array; colorrange=(0, maxscore), colormap=:binary) #hide
+    hmnew = heatmap!(axnew, N′.array; colorrange=(0, maxscore), colormap=:binary) #hide
+
+    Colorbar(f[1, 3], hmnew; label="SimSpread score") #hide
+    colsize!(f.layout, 1, Aspect(1, 1.0)) #hide
+    colsize!(f.layout, 2, Aspect(1, 1.0)) #hide
+    return f #hide
+end; #hide
+nothing #hide
+````
+
+- Training set:
+
+````@example fishers-flowers
+heatmaps(ytrain, ŷtrain) #hide
+````
+
+- Testing set:
+
+````@example fishers-flowers
+heatmaps(ytest, ŷtest) #hide
 ````
 
 As we can see, we predict the probability for each class of flower possible. To evaluate
@@ -116,7 +206,7 @@ highest score as the predicted label.
 
 To convert the problem from single-class to multi-class, we do the following:
 
-````@example getting-started-v2
+````@example fishers-flowers
 class_mapper = ["Iris-setosa", "Iris-versicolor", "Iris-virginica"]
 
 ŷ = hcat(
@@ -143,13 +233,13 @@ value, and 2. _Error rate_, that indicates the inverse of accuracy.
 
 Let's start with accuracy:
 
-````@example getting-started-v2
+````@example fishers-flowers
 using AlgebraOfGraphics, CairoMakie
 set_aog_theme!()
 
 df = (
     train=[Bool(i ∈ train_idx) for i in 1:N],
-    y=iris[!, "class"],
+    y=y,
     yhat=ŷ[sortperm(ŷ[:, 1]), 2]
 )
 
@@ -170,7 +260,7 @@ draw(plt; axis=(width=400, height=225))
 As we can see, our proposed SimSpread model achieves high accuracy for both training and
 testing sets. Let's see the error rates for the same grouping:
 
-````@example getting-started-v2
+````@example fishers-flowers
 plt = data(df)
 plt *= expectation()
 plt *= mapping(
@@ -192,10 +282,10 @@ mean error rate than the training set.
 Let's visualize where the predicted classes fall in our training and testing sets. First,
 lets see our ground truth:
 
-````@example getting-started-v2
+````@example fishers-flowers
 df = (
-    sepallength=iris[!, "sepallength"],
-    petallength=iris[!, "petallength"],
+    sepallength=S[!, "sepallength"],
+    petallength=S[!, "petallength"],
     y=iris[!, "class"],
 )
 plt = data(df)
@@ -214,10 +304,10 @@ what we have see in the predictive performance.
 Let's visualize the prediction over this scatter plot to map where are the incorrect
 predictions:
 
-````@example getting-started-v2
+````@example fishers-flowers
 df = (
-    sepallength=iris[!, "sepallength"],
-    petallength=iris[!, "petallength"],
+    sepallength=S[!, "sepallength"],
+    petallength=S[!, "petallength"],
     train=[Bool(i ∈ train_idx) for i in 1:N],
     y=iris[!, "class"],
     yhat=ŷ[sortperm(ŷ[:, 1]), 2]
