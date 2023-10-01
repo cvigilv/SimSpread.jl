@@ -353,7 +353,7 @@ function recallatL(y, yhat, grouping, L::Integer=20)
         push!(performance, recallatL(y_g, yhat_g, L))
     end
 
-    return mean(performance)
+    return mean(skipmissing(performance))
 end
 
 
