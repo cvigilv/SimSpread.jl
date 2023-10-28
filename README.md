@@ -1,7 +1,3 @@
-*WARNING: this is a highly experimental package that is in its infancy. Expect
-breaking changes from time to time and change in functionality provided as it
-matures into its final state.*
-
 # SimSpread.jl
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://cvigilv.github.io/SimSpread.jl/stable/)
