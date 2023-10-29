@@ -14,7 +14,7 @@ using Trapz
 
 include("graphs.jl")
 include("performance.jl")
-include("simspread.jl")
+include("core.jl")
 include("utils.jl")
 include("examples.jl")
 
