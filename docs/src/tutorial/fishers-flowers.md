@@ -44,7 +44,7 @@ using Random #hide
 Random.seed!(1) #hide
 nflowers = size(y, 1)
 
-train = rand(nflowers) .< 0.9
+train = rand(nflowers) .< 0.75
 test = .!train
 
 ytrain = y[train, :]
@@ -166,15 +166,15 @@ heatmaps(M::NamedArray, N::NamedArray) = begin #hide
         ylabel="Flowers", #hide
         xticks=(1:3, names(y, 2)), #hide
         xticklabelrotation=π / 4, #hide
-    )
-    axnew = Axis(
-        f[1, 2],
-        title="Predictions",
-        xlabel="Class",
-        ylabel="Flowers",
+    ) #hide
+    axnew = Axis( #hide
+        f[1, 2], #hide
+        title="Predictions", #hide
+        xlabel="Class", #hide
+        ylabel="Flowers", #hide
         xticks=(1:3, names(y, 2)), #hide
         xticklabelrotation=π / 4 #hide
-    )
+    ) #hide
     heatmap!(axold, M′.array; colorrange=(0, maxscore), colormap=:binary) #hide
     hmnew = heatmap!(axnew, N′.array; colorrange=(0, maxscore), colormap=:binary) #hide
 
@@ -201,128 +201,59 @@ heatmaps(ytest, ŷtest) #hide
 As we can see, we predict the probability for each class of flower possible. To evaluate
 the predictive performance as a multiclass problem, we will assign the label with the
 highest score as the predicted label.
-> In the example above, the predicted labels for each row in the matrix would be
-> "Iris-virginica" (C3), "Iris-setosa" (C1) & "Iris-setosa" (C1).
-
-To convert the problem from single-class to multi-class, we do the following:
 
 ````@example fishers-flowers
-class_mapper = ["Iris-setosa", "Iris-versicolor", "Iris-virginica"]
-
-ŷ = hcat(
-    vcat(test_idx, train_idx),
-    vcat(
-        [class_mapper[cidx] for (_, cidx) in Tuple.(argmax(ŷtest, dims=2))],
-        [class_mapper[cidx] for (_, cidx) in Tuple.(argmax(ŷtrain, dims=2))]
-    )
-)
-
-first(ŷ[:, 2], 3)
+class_mapper = ["Iris-setosa", "Iris-versicolor", "Iris-virginica"] #hide
+ŷ = hcat( #hide
+    vcat(findall.(==(1), [test, train])...), #hide
+    vcat( #hide
+        [class_mapper[cidx] for (_, cidx) in Tuple.(argmax(ŷtest, dims=2))], #hide
+        [class_mapper[cidx] for (_, cidx) in Tuple.(argmax(ŷtrain, dims=2))] #hide
+    ) #hide
+); #hide
+nothing #hide
 ````
-
-Great! Our predicted labels match what we expected. Now let's assess how good is SimSpread
-in predicting the classes for the iris dataset.
 
 ## Assesing the predictive performance of the proposed model
-In order to have an idea of the predictive performance of the model we constructed, we
-will use two common metrics in multi-class prediction problems to evaluate the predictions
-for both the training and testing sets:
-
-1. _Accuracy_, that indicates how close a given set of predictions are to their true
-value, and 2. _Error rate_, that indicates the inverse of accuracy.
-
-Let's start with accuracy:
-
-````@example fishers-flowers
-using AlgebraOfGraphics, CairoMakie
-set_aog_theme!()
-
-df = (
-    train=[Bool(i ∈ train_idx) for i in 1:N],
-    y=y,
-    yhat=ŷ[sortperm(ŷ[:, 1]), 2]
-)
-
-plt = data(df)
-plt *= expectation()
-plt *= mapping(
-    :y => "Class",
-    (:y, :yhat) => isequal => "Accuracy"
-)
-plt *= mapping(
-    dodge=:train => renamer(true => "Training set", false => "Testing set") => "Dataset",
-    color=:train => renamer(true => "Training set", false => "Testing set") => "Dataset"
-)
-
-draw(plt; axis=(width=400, height=225))
-````
-
-As we can see, our proposed SimSpread model achieves high accuracy for both training and
-testing sets. Let's see the error rates for the same grouping:
-
-````@example fishers-flowers
-plt = data(df)
-plt *= expectation()
-plt *= mapping(
-    :y => "Class",
-    (:y, :yhat) => !isequal => "Error rate"
-)
-plt *= mapping(
-    dodge=:train => renamer(true => "Training set", false => "Testing set") => "Dataset",
-    color=:train => renamer(true => "Training set", false => "Testing set") => "Dataset"
-)
-
-draw(plt; axis=(width=400, height=225))
-````
-
-Here we also see goo performance, achieving low error rate for all the classes in both the
-training and testing sets. We also can appreciate that the the testing set present a higher
-mean error rate than the training set.
-
-Let's visualize where the predicted classes fall in our training and testing sets. First,
-lets see our ground truth:
-
-````@example fishers-flowers
-df = (
-    sepallength=S[!, "sepallength"],
-    petallength=S[!, "petallength"],
-    y=iris[!, "class"],
-)
-plt = data(df)
-plt *= mapping(
-    :sepallength => "Sepal Length (cm)",
-    :petallength => "Petal Length (cm)",
-    color=:y => "Class"
-)
-draw(plt; axis=(width=300, height=300))
-````
-
-We can clearly see that _setosa_ plants are completely separated from the rest of the plants
-in the dataset. _Versicolor_ and _virginica_ present some overlap, which might respond to
-what we have see in the predictive performance.
-
-Let's visualize the prediction over this scatter plot to map where are the incorrect
+Firstly, let's visualize the prediction over this scatter plot to map where are the incorrect
 predictions:
 
 ````@example fishers-flowers
-df = (
-    sepallength=S[!, "sepallength"],
-    petallength=S[!, "petallength"],
-    train=[Bool(i ∈ train_idx) for i in 1:N],
-    y=iris[!, "class"],
-    yhat=ŷ[sortperm(ŷ[:, 1]), 2]
-)
+using AlgebraOfGraphics, CairoMakie #hide
+set_aog_theme!() #hide
+df = ( #hide
+    sepallength=X[:, "sepallength"], #hide
+    petallength=X[:, "petallength"], #hide
+    train=train, #hide
+    y=vec([class_mapper[cidx] for (_, cidx) in Tuple.(argmax(y, dims=2))]), #hide
+    yhat=ŷ[sortperm(ŷ[:, 1]), 2] #hide
+) #hide
+plt = data(df) #hide
+plt *= mapping( #hide
+    :sepallength => "Sepal Length (cm)", #hide
+    :petallength => "Petal Length (cm)", #hide
+    row=:train => renamer(true => "Training set", false => "Testing set") => "Dataset", #hide
+    col=:y => "Class", #hide
+    color=:yhat => "Predicted class" #hide
+) #hide
+draw(plt; axis=(width=225, height=225)) #hide
+````
 
-plt = data(df)
-plt *= mapping(
-    :sepallength => "Sepal Length (cm)",
-    :petallength => "Petal Length (cm)",
-    row=:train => renamer(true => "Training set", false => "Testing set") => "Dataset",
-    col=:y => "Class",
-    color=:yhat => "Predicted class"
-)
+As we can see, the model is capable of predicting the vast mayority of the labels correctly,
+failing in some cases where the virginica and versicolor flower overlap. Let's quantify the
+predictive performance of the model using some of `SimSpread.jl` built-in performance
+assesment functions, for example, area under the Receiver-Operating-Characteristic:
 
-draw(plt; axis=(width=225, height=225))
+````@example fishers-flowers
+println("AuROC (training set): ", AuROC(Bool.(vec(ytrain)), vec(ŷtrain)))
+println("AuROC (testing set):  ", AuROC(Bool.(vec(ytest)), vec(ŷtest)))
+````
+
+and Precision-Recall curve:
+
+````@example fishers-flowers
+println("AuPRC (training set): ", AuPRC(Bool.(vec(ytrain)), vec(ŷtrain)))
+println("AuPRC (testing set):  ", AuPRC(Bool.(vec(ytest)), vec(ŷtest)))
 ````
 
 ---
