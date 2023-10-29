@@ -1,7 +1,7 @@
 name = "SimSpread"
 uuid = "afa5cc60-bf5a-45b9-aa6c-27158a106b2a"
 authors = ["Carlos Vigil Vásquez <carlos.vigil.v@gmail.com> and contributors"]
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
