@@ -1,7 +1,7 @@
 # SimSpread.jl
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://cvigilv.github.io/SimSpread.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://cvigilv.github.io/SimSpread.jl/dev/)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://cvigilv.github.io/SimSpread.jl/develop/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://cvigilv.github.io/SimSpread.jl/develop/)
 [![Build Status](https://github.com/cvigilv/SimSpread.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/cvigilv/SimSpread.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 <img src="/docs/src/assets/logo.png" align="right" style="padding-left:10px;" width="250"/>
@@ -29,9 +29,6 @@ For the newest version (development version, may break):
 ~~~ julia
 using Pkg; Pkg.add(url = "https://github.com/cvigilv/SimSpread.jl.git", rev = "develop")
 ~~~
-
-## Examples
-For examples, please refer to the tutorial notebooks here.
 
 ## Support
 
