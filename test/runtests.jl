@@ -155,6 +155,8 @@ end
 
         @test SimSpread.predict(A, B, y) == yhat
         @test SimSpread.predict((A, B), y) == yhat
+        @test all(SimSpread.predict(A, B, y; returnweights=true) .== (yhat, spread(B)))
+        @test all(SimSpread.predict((A, B), y; returnweights=true) .== (yhat, spread(B)))
     end
 
     @testset "clean!" begin
